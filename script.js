@@ -1,0 +1,321 @@
+// ==========================================
+// CONFIGURAÇÃO DO FIREBASE
+// ==========================================
+const firebaseConfig = {
+    apiKey: "AIzaSyArhsq3ocgYYIg0m6CkxxO9n8ieLFbBC0I",
+    authDomain: "dabruale-a9712.firebaseapp.com",
+    databaseURL: "https://dabruale-a9712-default-rtdb.firebaseio.com",
+    projectId: "dabruale-a9712",
+    storageBucket: "dabruale-a9712.firebasestorage.app",
+    messagingSenderId: "904434904806",
+    appId: "1:904434904806:web:2054057c62bd41aa361527"
+};
+
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+
+const auth = firebase.auth();
+const db = firebase.database();
+let listaProdutosGlobal = [];
+const NUMERO_WHATSAPP = "5565996719068";
+
+// MONITORA SE O USUÁRIO ESTÁ LOGADO
+auth.onAuthStateChanged((user) => {
+    const loginContainer = document.getElementById("loginContainer");
+    const adminPanel = document.getElementById("adminPanel");
+
+    if (user) {
+        if (loginContainer) loginContainer.style.display = "none";
+        if (adminPanel) adminPanel.style.display = "flex";
+        carregarProdutos();
+    } else {
+        if (loginContainer) loginContainer.style.display = "flex";
+        if (adminPanel) adminPanel.style.display = "none";
+    }
+});
+
+// ==========================================
+// AUTENTICAÇÃO / LOGIN
+// ==========================================
+function fazerLoginFirebase(e) {
+    if (e) e.preventDefault();
+    const email = document.getElementById("emailInput").value.trim();
+    const senha = document.getElementById("senhaInput").value;
+    const msgErro = document.getElementById("msgErro");
+    const btnEntrar = document.getElementById("btnEntrar");
+
+    if (btnEntrar) {
+        btnEntrar.textContent = "Verificando...";
+        btnEntrar.disabled = true;
+    }
+
+    auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
+        .then(() => {
+            return auth.signInWithEmailAndPassword(email, senha);
+        })
+        .then(() => {
+            if (msgErro) msgErro.style.display = "none";
+        })
+        .catch((error) => {
+            if (msgErro) {
+                msgErro.textContent = "E-mail ou senha inválidos!";
+                msgErro.style.display = "block";
+            }
+        })
+        .finally(() => {
+            if (btnEntrar) {
+                btnEntrar.textContent = "Acessar Painel";
+                btnEntrar.disabled = false;
+            }
+        });
+}
+
+function fazerLogoutFirebase() {
+    auth.signOut();
+}
+
+// ==========================================
+// UPLOAD DE FOTO DIRETO PARA O CLOUDINARY
+// ==========================================
+async function carregarFotoLocal(event) {
+    const file = event.target.files[0];
+    const status = document.getElementById("statusFoto");
+
+    if (!file) return;
+
+    if (status) {
+        status.style.display = "block";
+        status.style.color = "#d81b60";
+        status.textContent = "⏳ Enviando imagem para o Cloudinary...";
+    }
+
+    const cloudName = "oudqsxxs";
+    const uploadPreset = "dabruale";
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", uploadPreset);
+
+    try {
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.secure_url) {
+            document.getElementById("imagem").value = data.secure_url;
+            if (status) {
+                status.style.color = "#2e7d32";
+                status.textContent = "✅ Foto enviada e link salvo no Cloudinary!";
+            }
+        } else {
+            throw new Error(data.error ? data.error.message : "Falha no envio");
+        }
+    } catch (err) {
+        if (status) {
+            status.style.color = "#d32f2f";
+            status.textContent = "❌ Erro ao enviar foto: " + err.message;
+        }
+    }
+}
+
+// ==========================================
+// GERENCIAMENTO DE PRODUTOS
+// ==========================================
+function carregarProdutos() {
+    db.ref("produtos").on("value", (snapshot) => {
+        listaProdutosGlobal = [];
+        snapshot.forEach((child) => {
+            listaProdutosGlobal.push({
+                id: child.key,
+                ...child.val()
+            });
+        });
+        renderizarLista();
+    });
+}
+
+function renderizarLista() {
+    const container = document.getElementById("listaProdutos");
+    const badgeTotal = document.getElementById("totalProdutos");
+    
+    if (badgeTotal) badgeTotal.textContent = listaProdutosGlobal.length;
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    if (listaProdutosGlobal.length === 0) {
+        container.innerHTML = "<p style='text-align:center; padding: 20px; color: #888; font-size: 0.85rem;'>Nenhum produto cadastrado ainda.</p>";
+        return;
+    }
+
+    listaProdutosGlobal.forEach(prod => {
+        const img = prod.imagem || 'https://via.placeholder.com/60';
+        const precoFormatado = parseFloat(prod.preco || 0).toFixed(2).replace('.', ',');
+        const tamanhosTxt = Array.isArray(prod.tamanhos) ? prod.tamanhos.join(', ') : (prod.tamanhos || 'N/A');
+
+        const div = document.createElement("div");
+        div.className = "item-admin-produto";
+        div.innerHTML = `
+            <img src="${img}" alt="${prod.nome}">
+            <div class="item-info">
+                <div class="item-nome">${prod.nome}</div>
+                <div class="item-detalhes">Cat: <strong>${prod.categoria || 'Geral'}</strong> | Tam: <strong>${tamanhosTxt}</strong></div>
+                <div class="item-preco">R$ ${precoFormatado}</div>
+            </div>
+            <div class="item-acoes">
+                <button class="btn-acao btn-editar" onclick="prepararEdicao('${prod.id}')">✏️ Editar</button>
+                <button class="btn-acao btn-excluir" onclick="excluirProduto('${prod.id}', '${prod.nome}')">🗑️ Excluir</button>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function salvarProduto(e) {
+    if (e) e.preventDefault();
+
+    const id = document.getElementById("produtoId").value;
+    const nome = document.getElementById("nome").value.trim();
+    const descricao = document.getElementById("descricao") ? document.getElementById("descricao").value.trim() : '';
+    const preco = parseFloat(document.getElementById("preco").value);
+    const categoria = document.getElementById("categoria").value;
+    const tamanhosInput = document.getElementById("tamanhos").value.trim();
+    const imagem = document.getElementById("imagem").value.trim();
+
+    const tamanhosArr = tamanhosInput.split(',').map(t => t.trim()).filter(t => t !== '');
+
+    const dadosProduto = {
+        nome: nome,
+        descricao: descricao,
+        preco: preco,
+        categoria: categoria,
+        tamanhos: tamanhosArr,
+        imagem: imagem
+    };
+
+    if (id) {
+        db.ref("produtos/" + id).update(dadosProduto)
+            .then(() => {
+                mostrarAviso("✅ Produto atualizado com sucesso!");
+                resetarFormulario();
+            });
+    } else {
+        db.ref("produtos").push(dadosProduto)
+            .then(() => {
+                mostrarAviso("✅ Novo produto cadastrado!");
+                resetarFormulario();
+            });
+    }
+}
+
+function prepararEdicao(id) {
+    const prod = listaProdutosGlobal.find(p => p.id === id);
+    if (!prod) return;
+
+    document.getElementById("produtoId").value = prod.id;
+    document.getElementById("nome").value = prod.nome || '';
+    if (document.getElementById("descricao")) {
+        document.getElementById("descricao").value = prod.descricao || '';
+    }
+    document.getElementById("preco").value = prod.preco || '';
+    document.getElementById("categoria").value = prod.categoria || 'Calcinhas';
+    
+    const tamanhosTxt = Array.isArray(prod.tamanhos) ? prod.tamanhos.join(', ') : (prod.tamanhos || 'P, M, G, GG');
+    document.getElementById("tamanhos").value = tamanhosTxt;
+    document.getElementById("imagem").value = prod.imagem || '';
+
+    const titulo = document.getElementById("tituloForm");
+    if (titulo) titulo.textContent = "✏️ Editar Produto";
+
+    const btnSubmit = document.getElementById("btnSubmit");
+    if (btnSubmit) btnSubmit.textContent = "💾 Salvar Alterações";
+
+    const btnCancelar = document.getElementById("btnCancelar");
+    if (btnCancelar) btnCancelar.style.display = "block";
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetarFormulario() {
+    const form = document.getElementById("formProduto");
+    if (form) form.reset();
+
+    document.getElementById("produtoId").value = "";
+    document.getElementById("tamanhos").value = "P, M, G, GG";
+
+    const titulo = document.getElementById("tituloForm");
+    if (titulo) titulo.textContent = "➕ Cadastrar Novo Produto";
+
+    const btnSubmit = document.getElementById("btnSubmit");
+    if (btnSubmit) btnSubmit.textContent = "💾 Salvar Produto";
+
+    const btnCancelar = document.getElementById("btnCancelar");
+    if (btnCancelar) btnCancelar.style.display = "none";
+
+    const status = document.getElementById("statusFoto");
+    if (status) status.style.display = "none";
+}
+
+function excluirProduto(id, nome) {
+    if (confirm(`Tem certeza que deseja excluir o produto "${nome}"?`)) {
+        db.ref("produtos/" + id).remove()
+            .then(() => {
+                mostrarAviso("🗑️ Produto excluído com sucesso!");
+            });
+    }
+}
+
+function mostrarAviso(msg) {
+    const box = document.getElementById("boxAviso");
+    if (!box) return;
+
+    box.textContent = msg;
+    box.className = "aviso sucesso";
+    box.style.display = "block";
+
+    setTimeout(() => {
+        box.style.display = "none";
+    }, 3000);
+}
+
+// ==========================================
+// ENVIO DE PEDIDO VIA WHATSAPP (AUXILIAR)
+// ==========================================
+function enviarPedidoWhatsapp(carrinho = [], dadosCliente = {}) {
+    if (!carrinho || carrinho.length === 0) {
+        alert("Seu carrinho está vazio!");
+        return;
+    }
+
+    let mensagem = "🛍️ *NOVO PEDIDO - DABRUALE MODA ÍNTIMA*\n\n";
+
+    if (dadosCliente.nome) mensagem += `👤 *Cliente:* ${dadosCliente.nome}\n`;
+    if (dadosCliente.telefone) mensagem += `📞 *Telefone:* ${dadosCliente.telefone}\n`;
+    if (dadosCliente.endereco) mensagem += `📍 *Endereço:* ${dadosCliente.endereco}\n`;
+    if (dadosCliente.pagamento) mensagem += `💳 *Pagamento:* ${dadosCliente.pagamento}\n`;
+    if (dadosCliente.obs) mensagem += `📝 *Observações:* ${dadosCliente.obs}\n`;
+
+    mensagem += "\n📦 *ITENS DO PEDIDO:*\n";
+
+    let total = 0;
+    carrinho.forEach((item, index) => {
+        const subtotal = (item.preco || 0) * (item.quantidade || 1);
+        total += subtotal;
+        const precoUnit = parseFloat(item.preco || 0).toFixed(2).replace('.', ',');
+        const subtotalTxt = parseFloat(subtotal).toFixed(2).replace('.', ',');
+
+        mensagem += `${index + 1}. *${item.nome}*\n`;
+        if (item.tamanho) mensagem += `   • Tamanho: ${item.tamanho}\n`;
+        mensagem += `   • Qtd: ${item.quantidade || 1} x R$ ${precoUnit} = R$ ${subtotalTxt}\n`;
+    });
+
+    const totalTxt = parseFloat(total).toFixed(2).replace('.', ',');
+    mensagem += `\n💰 *TOTAL DO PEDIDO:* R$ ${totalTxt}`;
+
+    const url = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
+    window.open(url, "_blank");
+}

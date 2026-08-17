@@ -1,0 +1,297 @@
+/* RESET E ESTILOS GERAIS */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    background-color: #fff0f5;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* REGRA PRINCIPAL: ESCONDE A TELA QUE NÃO DEVE APARECER */
+.hidden {
+    display: none !important;
+}
+
+/* CABEÇALHO */
+header {
+    background-color: #d81b60;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.logo-container h1 {
+    font-size: 1.4rem;
+    margin-bottom: 2px;
+}
+
+.logo-container p {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.botao-carrinho-topo {
+    background-color: white;
+    color: #d81b60;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.botao-carrinho-topo:hover {
+    background-color: #f8bbd0;
+}
+
+/* CONTAINER PRINCIPAL */
+.container-principal {
+    max-width: 600px;
+    width: 100%;
+    margin: 20px auto;
+    padding: 0 15px;
+    flex: 1;
+}
+
+/* BUSCA E CATEGORIAS */
+.container-busca {
+    margin-bottom: 15px;
+}
+
+.container-busca input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ffb6c1;
+    border-radius: 20px;
+    outline: none;
+    font-size: 0.95rem;
+}
+
+.categorias {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.categorias button {
+    background-color: white;
+    border: 1px solid #d81b60;
+    color: #d81b60;
+    padding: 8px 16px;
+    border-radius: 20px;
+    white-space: nowrap;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.categorias button.ativo, .categorias button:hover {
+    background-color: #d81b60;
+    color: white;
+}
+
+/* LISTA DE PRODUTOS EMPILHADOS */
+#produtos {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.produto {
+    background: white;
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+    border: 1px solid #ffe4e8;
+}
+
+.produto img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+
+.produto-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.produto-info h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111;
+    margin: 0;
+}
+
+.produto-descricao {
+    font-size: 0.8rem;
+    color: #777;
+    margin: 0;
+}
+
+.produto-preco {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #d81b60;
+    margin-bottom: 4px;
+}
+
+.linha-controles {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.seletor-tamanho {
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid #d81b60;
+    color: #d81b60;
+    background: white;
+    font-size: 0.85rem;
+    outline: none;
+}
+
+.controle-quantidade {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.controle-quantidade button {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid #ccc;
+    background: white;
+    color: #555;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.controle-quantidade span {
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.botao-adicionar {
+    background-color: #d81b60;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.85rem;
+    cursor: pointer;
+    align-self: flex-start;
+}
+
+/* TELA DE CARRINHO E PAINÉIS DE ENTREGA */
+.btn-voltar {
+    background: white;
+    border: 1px solid #d81b60;
+    color: #d81b60;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 15px;
+}
+
+.card-painel {
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border: 1px solid #ffe4e8;
+}
+
+.card-painel h2 {
+    font-size: 1.2rem;
+    color: #d81b60;
+    margin-bottom: 15px;
+}
+
+.item-carrinho-linha {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.resumo-carrinho {
+    text-align: right;
+    font-size: 1.2rem;
+    margin-top: 15px;
+    color: #d81b60;
+}
+
+/* FORMULÁRIO DE ENTREGA ESTILIZADO */
+.form-group {
+    margin-bottom: 12px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+    color: #555;
+    font-weight: 600;
+}
+
+.form-group input, .form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ffb6c1;
+    border-radius: 8px;
+    outline: none;
+    font-size: 0.95rem;
+}
+
+.btn-whatsapp {
+    width: 100%;
+    background-color: #25d366;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+/* RODAPÉ */
+footer {
+    background-color: #880e4f;
+    color: white;
+    text-align: center;
+    padding: 15px;
+    margin-top: 30px;
+}

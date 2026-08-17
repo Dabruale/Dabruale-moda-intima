@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - Dabruale Moda Íntima</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            max-width: 650px;
+            width: 100%;
+            background-color: #fdf2f8;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 15px rgba(0,0,0,0.08);
+            position: relative;
+        }
+
+        /* --- TELA DE LOGIN --- */
+        #loginContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            background-color: #fdf2f8;
+        }
+
+        .card-login {
+            background: white;
+            padding: 30px 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+        }
+
+        .card-login h1 {
+            color: #d81b60;
+            font-size: 1.2rem;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .card-login p {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .card-login input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            outline: none;
+        }
+
+        .card-login input:focus {
+            border-color: #d81b60;
+        }
+
+        .btn-entrar {
+            width: 100%;
+            background-color: #d81b60;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-entrar:hover {
+            background-color: #c2185b;
+        }
+
+        .erro-login {
+            color: #d32f2f;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            display: none;
+            font-weight: bold;
+        }
+
+        /* --- PAINEL ADMIN --- */
+        #adminPanel {
+            display: none;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #d81b60;
+            color: white;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        header h1 {
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 800;
+        }
+
+        header p {
+            font-size: 0.72rem;
+            opacity: 0.95;
+        }
+
+        .header-acoes {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-header {
+            background-color: white;
+            color: #d81b60;
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.75rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-header:active {
+            transform: scale(0.95);
+        }
+
+        main {
+            flex: 1;
+            padding: 16px;
+        }
+
+        .card-form {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .card-form h2 {
+            font-size: 1rem;
+            color: #d81b60;
+            margin-bottom: 12px;
+            border-bottom: 2px solid #fdf2f8;
+            padding-bottom: 6px;
+        }
+
+        .form-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .campo-grupo {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .campo-linha {
+            display: flex;
+            gap: 10px;
+        }
+
+        .campo-linha .campo-grupo {
+            flex: 1;
+        }
+
+        label {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #444;
+        }
+
+        input, select, textarea {
+            padding: 9px 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            outline: none;
+            width: 100%;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: #d81b60;
+        }
+
+        .btn-upload {
+            background: #d81b60;
+            color: white;
+            border: none;
+            padding: 0 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn-salvar {
+            background-color: #d81b60;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-top: 6px;
+            transition: background 0.2s;
+        }
+
+        .btn-salvar:hover {
+            background-color: #c2185b;
+        }
+
+        .btn-cancelar {
+            background-color: #757575;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-top: 6px;
+            display: none;
+        }
+
+        .secao-lista h2 {
+            font-size: 1rem;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .badge-total {
+            background: #d81b60;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+
+        .lista-produtos {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .item-admin-produto {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+
+        .item-admin-produto img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-nome {
+            font-weight: bold;
+            font-size: 0.88rem;
+            color: #333;
+        }
+
+        .item-detalhes {
+            font-size: 0.72rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .item-preco {
+            color: #d81b60;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        .item-acoes {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .btn-acao {
+            border: none;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-editar {
+            background-color: #ff9800;
+            color: white;
+        }
+
+        .btn-excluir {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .aviso {
+            display: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            text-align: center;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+
+        .aviso.sucesso {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+
+        footer {
+            background-color: #d81b60;
+            color: white;
+            text-align: center;
+            padding: 12px;
+            font-size: 0.75rem;
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+
+        <!-- TELA DE LOGIN FIREBASE -->
+        <div id="loginContainer">
+            <div class="card-login">
+                <h1>🔒 DABRUALE ADMIN</h1>
+                <p>Acesse com seu e-mail e senha cadastrados</p>
+                <form onsubmit="fazerLoginFirebase(event)">
+                    <input type="email" id="emailInput" placeholder="Seu E-mail" required autofocus>
+                    <input type="password" id="senhaInput" placeholder="Sua Senha" required>
+                    <button type="submit" class="btn-entrar" id="btnEntrar">Acessar Painel</button>
+                </form>
+                <div class="erro-login" id="msgErro">E-mail ou senha incorretos!</div>
+            </div>
+        </div>
+
+        <!-- PAINEL ADMIN -->
+        <div id="adminPanel">
+            <header>
+                <div>
+                    <h1>DABRUALE MODA ÍNTIMA</h1>
+                    <p>Gerenciador de Produtos</p>
+                </div>
+                <div class="header-acoes">
+                    <a href="index.html" class="btn-header">🛍️ Ver Catálogo</a>
+                    <button onclick="fazerLogoutFirebase()" class="btn-header" style="background:#f44336; color:white;">🚪 Sair</button>
+                </div>
+            </header>
+
+            <main>
+                <div class="aviso" id="boxAviso"></div>
+
+                <div class="card-form">
+                    <h2 id="tituloForm">➕ Cadastrar Novo Produto</h2>
+                    
+                    <form id="formProduto" onsubmit="salvarProduto(event)">
+                        <input type="hidden" id="produtoId">
+
+                        <div class="form-grid">
+                            <div class="campo-grupo">
+                                <label for="nome">Nome do Produto *</label>
+                                <input type="text" id="nome" placeholder="Ex: Conjunto Renda Luxo" required>
+                            </div>
+
+                            <div class="campo-linha">
+                                <div class="campo-grupo">
+                                    <label for="preco">Preço (R$) *</label>
+                                    <input type="number" step="0.01" id="preco" placeholder="Ex: 38.90" required>
+                                </div>
+
+                                <div class="campo-grupo">
+                                    <label for="categoria">Categoria *</label>
+                                    <select id="categoria" required>
+                                        <option value="Calcinhas">Calcinhas</option>
+                                        <option value="Sutiãs">Sutiãs</option>
+                                        <option value="Conjuntos">Conjuntos</option>
+                                        <option value="Baby Doll">Baby Doll</option>
+                                        <option value="Camisolas">Camisolas</option>
+                                        <option value="Pijamas">Pijamas</option>
+                                        <option value="Cuecas">Cuecas</option>
+                                        <option value="Meias">Meias</option>
+                                        <option value="Cintas">Cintas</option>
+                                        <option value="Fitness">Fitness</option>
+                                        <option value="Biquíni">Biquíni</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="campo-grupo">
+                                <label for="tamanhos">Tamanhos Disponíveis (separados por vírgula) *</label>
+                                <input type="text" id="tamanhos" placeholder="Ex: P, M, G, GG, TAMANHO ÚNICO" value="P, M, G, GG" required>
+                            </div>
+
+                            <div class="campo-grupo">
+                                <label for="descricao">Descrição do Produto</label>
+                                <textarea id="descricao" rows="2" placeholder="Ex: Tecido leve, confortável e com alta elasticidade."></textarea>
+                            </div>
+
+                            <!-- FOTO 1 -->
+                            <div class="campo-grupo">
+                                <label for="imagem">Foto Principal (Frente) *</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" id="imagem" placeholder="Link da foto 1..." required>
+                                    <button type="button" class="btn-upload" onclick="document.getElementById('fileInput1').click()">
+                                        📁 Escolher Foto 1
+                                    </button>
+                                </div>
+                                <input type="file" id="fileInput1" accept="image/*" style="display: none;" onchange="carregarFotoLocal(event, 'imagem', 'statusFoto1')">
+                                <small id="statusFoto1" style="display: none; font-weight: bold; margin-top: 4px;"></small>
+                            </div>
+
+                            <!-- FOTO 2 -->
+                            <div class="campo-grupo">
+                                <label for="imagem2">Foto 2 (Costas / Detalhe - Opcional)</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" id="imagem2" placeholder="Link da foto 2 (opcional)...">
+                                    <button type="button" class="btn-upload" onclick="document.getElementById('fileInput2').click()">
+                                        📁 Escolher Foto 2
+                                    </button>
+                                </div>
+                                <input type="file" id="fileInput2" accept="image/*" style="display: none;" onchange="carregarFotoLocal(event, 'imagem2', 'statusFoto2')">
+                                <small id="statusFoto2" style="display: none; font-weight: bold; margin-top: 4px;"></small>
+                            </div>
+
+                            <!-- FOTO 3 -->
+                            <div class="campo-grupo">
+                                <label for="imagem3">Foto 3 (Outra cor / Ângulo - Opcional)</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" id="imagem3" placeholder="Link da foto 3 (opcional)...">
+                                    <button type="button" class="btn-upload" onclick="document.getElementById('fileInput3').click()">
+                                        📁 Escolher Foto 3
+                                    </button>
+                                </div>
+                                <input type="file" id="fileInput3" accept="image/*" style="display: none;" onchange="carregarFotoLocal(event, 'imagem3', 'statusFoto3')">
+                                <small id="statusFoto3" style="display: none; font-weight: bold; margin-top: 4px;"></small>
+                            </div>
+
+                            <button type="submit" class="btn-salvar" id="btnSubmit">💾 Salvar Produto</button>
+                            <button type="button" class="btn-cancelar" id="btnCancelar" onclick="resetarFormulario()">❌ Cancelar Edição</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="secao-lista">
+                    <h2>
+                        <span>📦 Produtos Cadastrados</span>
+                        <span class="badge-total" id="totalProdutos">0</span>
+                    </h2>
+
+                    <div class="lista-produtos" id="listaProdutos">
+                        <!-- Produtos inseridos via JS -->
+                    </div>
+                </div>
+            </main>
+
+            <footer>
+                <strong>DABRUALE MODA ÍNTIMA</strong> - Painel Administrativo
+            </footer>
+        </div>
+
+    </div>
+
+    <!-- FIREBASE SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyArhsq3ocgYYIg0m6CkxxO9n8ieLFbBC0I",
+            authDomain: "dabruale-a9712.firebaseapp.com",
+            databaseURL: "https://dabruale-a9712-default-rtdb.firebaseio.com",
+            projectId: "dabruale-a9712",
+            storageBucket: "dabruale-a9712.firebasestorage.app",
+            messagingSenderId: "904434904806",
+            appId: "1:904434904806:web:2054057c62bd41aa361527"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const auth = firebase.auth();
+        const db = firebase.database();
+        let listaProdutosGlobal = [];
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById("loginContainer").style.display = "none";
+                document.getElementById("adminPanel").style.display = "flex";
+                carregarProdutos();
+            } else {
+                document.getElementById("loginContainer").style.display = "flex";
+                document.getElementById("adminPanel").style.display = "none";
+            }
+        });
+
+        function fazerLoginFirebase(e) {
+            e.preventDefault();
+            const email = document.getElementById("emailInput").value.trim();
+            const senha = document.getElementById("senhaInput").value;
+            const msgErro = document.getElementById("msgErro");
+            const btnEntrar = document.getElementById("btnEntrar");
+
+            btnEntrar.textContent = "Verificando...";
+            btnEntrar.disabled = true;
+
+            auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
+                .then(() => {
+                    return auth.signInWithEmailAndPassword(email, senha);
+                })
+                .then(() => {
+                    msgErro.style.display = "none";
+                })
+                .catch((error) => {
+                    msgErro.textContent = "E-mail ou senha inválidos!";
+                    msgErro.style.display = "block";
+                })
+                .finally(() => {
+                    btnEntrar.textContent = "Acessar Painel";
+                    btnEntrar.disabled = false;
+                });
+        }
+
+        function fazerLogoutFirebase() {
+            auth.signOut();
+        }
+
+        // FUNÇÃO DE UPLOAD PARA O CLOUDINARY SUPORTANDO MÚLTIPLOS CAMPOS
+        async function carregarFotoLocal(event, inputTargetId, statusTargetId) {
+            const file = event.target.files[0];
+            const status = document.getElementById(statusTargetId);
+            const campoImagem = document.getElementById(inputTargetId);
+
+            if (!file) return;
+
+            campoImagem.value = `Enviando: ${file.name}...`;
+
+            if (status) {
+                status.style.display = "block";
+                status.style.color = "#d81b60";
+                status.textContent = `⏳ Otimizando e enviando foto...`;
+            }
+
+            const cloudName = "oudqsxxs";
+            const uploadPreset = "dabruale";
+
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("upload_preset", uploadPreset);
+
+            try {
+                const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.secure_url) {
+                    campoImagem.value = data.secure_url;
+                    if (status) {
+                        status.style.color = "#2e7d32";
+                        status.textContent = "✅ Foto enviada com sucesso!";
+                    }
+                } else {
+                    campoImagem.value = "";
+                    throw new Error(data.error ? data.error.message : "Falha ao enviar a foto");
+                }
+            } catch (err) {
+                campoImagem.value = "";
+                if (status) {
+                    status.style.color = "#d32f2f";
+                    status.textContent = "❌ Erro: " + err.message;
+                }
+                alert("Erro ao enviar imagem. Verifique se o Upload Preset 'dabruale' está configurado como Unsigned no Cloudinary.");
+            }
+        }
+
+        function carregarProdutos() {
+            db.ref("produtos").on("value", (snapshot) => {
+                listaProdutosGlobal = [];
+                snapshot.forEach((child) => {
+                    listaProdutosGlobal.push({
+                        id: child.key,
+                        ...child.val()
+                    });
+                });
+                renderizarLista();
+            });
+        }
+
+        function renderizarLista() {
+            const container = document.getElementById("listaProdutos");
+            const badgeTotal = document.getElementById("totalProdutos");
+            
+            badgeTotal.textContent = listaProdutosGlobal.length;
+            container.innerHTML = "";
+
+            if (listaProdutosGlobal.length === 0) {
+                container.innerHTML = "<p style='text-align:center; padding: 20px; color: #888; font-size: 0.85rem;'>Nenhum produto cadastrado ainda.</p>";
+                return;
+            }
+
+            listaProdutosGlobal.forEach(prod => {
+                const img = prod.imagem || 'https://via.placeholder.com/60';
+                const precoFormatado = parseFloat(prod.preco || 0).toFixed(2).replace('.', ',');
+                const tamanhosTxt = Array.isArray(prod.tamanhos) ? prod.tamanhos.join(', ') : (prod.tamanhos || 'N/A');
+
+                // Contar quantas fotos o produto possui
+                let totalFotos = 0;
+                if (prod.imagem) totalFotos++;
+                if (prod.imagem2) totalFotos++;
+                if (prod.imagem3) totalFotos++;
+
+                const div = document.createElement("div");
+                div.className = "item-admin-produto";
+                div.innerHTML = `
+                    <img src="${img}" alt="${prod.nome}">
+                    <div class="item-info">
+                        <div class="item-nome">${prod.nome}</div>
+                        <div class="item-detalhes">Cat: <strong>${prod.categoria || 'Geral'}</strong> | Tam: <strong>${tamanhosTxt}</strong> | 🖼️ <strong>${totalFotos} foto(s)</strong></div>
+                        <div class="item-preco">R$ ${precoFormatado}</div>
+                    </div>
+                    <div class="item-acoes">
+                        <button class="btn-acao btn-editar" onclick="prepararEdicao('${prod.id}')">✏️ Editar</button>
+                        <button class="btn-acao btn-excluir" onclick="excluirProduto('${prod.id}', '${prod.nome}')">🗑️ Excluir</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function salvarProduto(e) {
+            e.preventDefault();
+
+            const id = document.getElementById("produtoId").value;
+            const nome = document.getElementById("nome").value.trim();
+            const descricao = document.getElementById("descricao").value.trim();
+            const preco = parseFloat(document.getElementById("preco").value);
+            const categoria = document.getElementById("categoria").value;
+            const tamanhosInput = document.getElementById("tamanhos").value.trim();
+            const imagem = document.getElementById("imagem").value.trim();
+            const imagem2 = document.getElementById("imagem2").value.trim();
+            const imagem3 = document.getElementById("imagem3").value.trim();
+
+            const tamanhosArr = tamanhosInput.split(',').map(t => t.trim()).filter(t => t !== '');
+
+            const dadosProduto = {
+                nome: nome,
+                descricao: descricao,
+                preco: preco,
+                categoria: categoria,
+                tamanhos: tamanhosArr,
+                imagem: imagem,
+                imagem2: imagem2,
+                imagem3: imagem3
+            };
+
+            if (id) {
+                db.ref("produtos/" + id).update(dadosProduto)
+                    .then(() => {
+                        mostrarAviso("✅ Produto atualizado com sucesso!");
+                        resetarFormulario();
+                    });
+            } else {
+                db.ref("produtos").push(dadosProduto)
+                    .then(() => {
+                        mostrarAviso("✅ Novo produto cadastrado!");
+                        resetarFormulario();
+                    });
+            }
+        }
+
+        function prepararEdicao(id) {
+            const prod = listaProdutosGlobal.find(p => p.id === id);
+            if (!prod) return;
+
+            document.getElementById("produtoId").value = prod.id;
+            document.getElementById("nome").value = prod.nome || '';
+            document.getElementById("descricao").value = prod.descricao || '';
+            document.getElementById("preco").value = prod.preco || '';
+            document.getElementById("categoria").value = prod.categoria || 'Calcinhas';
+            
+            const tamanhosTxt = Array.isArray(prod.tamanhos) ? prod.tamanhos.join(', ') : (prod.tamanhos || 'P, M, G, GG');
+            document.getElementById("tamanhos").value = tamanhosTxt;
+            
+            document.getElementById("imagem").value = prod.imagem || '';
+            document.getElementById("imagem2").value = prod.imagem2 || '';
+            document.getElementById("imagem3").value = prod.imagem3 || '';
+
+            document.getElementById("tituloForm").textContent = "✏️ Editar Produto";
+            document.getElementById("btnSubmit").textContent = "💾 Salvar Alterações";
+            document.getElementById("btnCancelar").style.display = "block";
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetarFormulario() {
+            document.getElementById("formProduto").reset();
+            document.getElementById("produtoId").value = "";
+            document.getElementById("tamanhos").value = "P, M, G, GG";
+            document.getElementById("tituloForm").textContent = "➕ Cadastrar Novo Produto";
+            document.getElementById("btnSubmit").textContent = "💾 Salvar Produto";
+            document.getElementById("btnCancelar").style.display = "none";
+
+            ['statusFoto1', 'statusFoto2', 'statusFoto3'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = "none";
+            });
+        }
+
+        function excluirProduto(id, nome) {
+            if (confirm(`Tem certeza que deseja excluir o produto "${nome}"?`)) {
+                db.ref("produtos/" + id).remove()
+                    .then(() => {
+                        mostrarAviso("🗑️ Produto excluído com sucesso!");
+                    });
+            }
+        }
+
+        function mostrarAviso(msg) {
+            const box = document.getElementById("boxAviso");
+            box.textContent = msg;
+            box.className = "aviso sucesso";
+            box.style.display = "block";
+
+            setTimeout(() => {
+                box.style.display = "none";
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
