@@ -5,13 +5,13 @@
     <!-- Prévia para WhatsApp e Redes Sociais -->
     <meta property="og:title" content="Dabruale Moda Íntima - Catálogo">
     <meta property="og:description" content="Confira nosso catálogo completo de produtos e faça seu pedido direto pelo WhatsApp!">
-   <meta property="og:image" content="https://dabruale.github.io/Dabruale-moda-intima/logo.png">
+    <meta property="og:image" content="https://dabruale.github.io/Dabruale-moda-intima/logo.png">
     <meta property="og:image:secure_url" content="https://dabruale.github.io/Dabruale-moda-intima/logo.png">
     <meta property="og:image:width" content="300">
     <meta property="og:image:height" content="300">
     <meta property="og:url" content="https://dabruale.github.io/Dabruale-moda-intima/">
     <meta property="og:type" content="website">
-   <meta property="og:image:type" content="image/png">
+    <meta property="og:image:type" content="image/png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dabruale Moda Íntima - Catálogo</title>
@@ -22,8 +22,6 @@
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-    </style>
-   
 
         body {
             background-color: #f0f0f0;
@@ -815,7 +813,6 @@
             }
 
             filtrados.forEach(prod => {
-                // Suporte a múltiplas fotos: imagem, imagem2, imagem3 ou array 'imagens'
                 let listaImagens = [];
                 if (Array.isArray(prod.imagens) && prod.imagens.length > 0) {
                     listaImagens = prod.imagens;
@@ -832,7 +829,6 @@
                 const imgPrincipal = listaImagens[0];
                 const precoFormatado = parseFloat(prod.preco || 0).toFixed(2).replace('.', ',');
 
-                // Gerar miniaturas se houver mais de 1 foto
                 let htmlMiniaturas = '';
                 if (listaImagens.length > 1) {
                     htmlMiniaturas = `<div class="miniaturas-container">` + 
@@ -965,22 +961,34 @@
                 const subtotal = (item.preco || 0) * (item.quantidade || 1);
                 total += subtotal;
 
-                const precoUnit = parseFloat(item.preco || 0).toFixed(2).replace('.', ',');
-
-                const div = document.createElement('div');
-                div.className = 'item-carrinho';
-                div.innerHTML = `
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'item-carrinho';
+                itemDiv.innerHTML = `
                     <div class="item-info">
                         <span class="item-nome">${item.nome}</span>
-                        <span class="badge-tamanho">Tam: ${item.tamanho}</span>
-                        <span class="item-detalhe">${item.quantidade} x R$ ${precoUnit}</span>
+                        <span class="badge-tamanho">Tamanho: ${item.tamanho}</span>
+                        <span class="item-detalhe">${item.quantidade}x R$ ${item.preco.toFixed(2).replace('.', ',')} = R$ ${subtotal.toFixed(2).replace('.', ',')}</span>
                     </div>
-                    <button class="btn-remover" onclick="removerDoCarrinho(${index})" title="Remover produto">🗑️</button>
+                    <button class="btn-remover" onclick="removerDoCarrinho(${index})">🗑️ Excluir</button>
                 `;
-                container.appendChild(div);
+                container.appendChild(itemDiv);
             });
 
             totalEl.textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+        }
+
+        function mostrarAviso(mensagem, ehAlerta = false) {
+            const box = document.getElementById('boxAvisoTamanho');
+            if (!box) return;
+
+            box.querySelector('span').textContent = mensagem;
+            box.className = 'aviso-tamanho-topo ' + (ehAlerta ? 'alerta' : 'sucesso');
+            box.style.display = 'flex';
+
+            if (timerAviso) clearTimeout(timerAviso);
+            timerAviso = setTimeout(() => {
+                box.style.display = 'none';
+            }, 3500);
         }
 
         function enviarPedidoWhatsapp() {
@@ -993,98 +1001,37 @@
             const rua = document.getElementById('clienteRua').value.trim();
             const numero = document.getElementById('clienteNumero').value.trim();
             const bairro = document.getElementById('clienteBairro').value.trim();
+            const cepRef = document.getElementById('clienteCepRef').value.trim();
             const cidade = document.getElementById('clienteCidade').value.trim();
             const estado = document.getElementById('clienteEstado').value.trim();
-            const cepRef = document.getElementById('clienteCepRef').value.trim();
             const pagamento = document.getElementById('clientePagamento').value;
             const obs = document.getElementById('clienteObs').value.trim();
 
-            if (!nome) {
-                alert("Informe seu nome!");
-                document.getElementById('clienteNome').focus();
+            if (!nome || !rua || !numero || !bairro || !cidade || !estado) {
+                alert("Por favor, preencha todos os campos obrigatórios (*).");
                 return;
-            }
-
-            if (!rua) {
-                alert("Informe a rua/avenida!");
-                document.getElementById('clienteRua').focus();
-                return;
-            }
-
-            if (!numero) {
-                alert("Informe o número!");
-                document.getElementById('clienteNumero').focus();
-                return;
-            }
-
-            if (!bairro) {
-                alert("Informe o bairro!");
-                document.getElementById('clienteBairro').focus();
-                return;
-            }
-
-            if (!cidade) {
-                alert("Informe a cidade!");
-                document.getElementById('clienteCidade').focus();
-                return;
-            }
-
-            if (!estado) {
-                alert("Informe o estado (UF)!");
-                document.getElementById('clienteEstado').focus();
-                return;
-            }
-
-            let enderecoCompleto = `${rua}, Nº ${numero}, Bairro ${bairro} - ${cidade}/${estado.toUpperCase()}`;
-            if (cepRef) {
-                enderecoCompleto += ` (${cepRef})`;
             }
 
             let mensagem = `*NOVO PEDIDO - DABRUALE MODA ÍNTIMA*\n\n`;
-            mensagem += `👤 *Cliente:* ${nome}\n`;
-            mensagem += `📍 *Endereço:* ${enderecoCompleto}\n`;
-            mensagem += `💳 *Forma de Pagamento:* ${pagamento}\n`;
-            
-            if (obs) {
-                mensagem += `📝 *Observações / Tamanho:* ${obs}\n`;
-            }
+            mensagem += `👤 *Nome:* ${nome}\n`;
+            mensagem += `📍 *Endereço:* ${rua}, Nº ${numero} - ${bairro}\n`;
+            if (cepRef) mensagem += `📌 *Ref/CEP:* ${cepRef}\n`;
+            mensagem += `🏙️ *Cidade/UF:* ${cidade}/${estado}\n`;
+            mensagem += `💳 *Pagamento:* ${pagamento}\n`;
+            if (obs) mensagem += `📝 *Obs:* ${obs}\n`;
 
-            mensagem += `\n🛍️ *ITENS DO PEDIDO:*\n`;
-
+            mensagem += `\n🛒 *ITENS DO PEDIDO:*\n`;
             let total = 0;
-
-            carrinho.forEach((item, index) => {
-                const subtotal = (item.preco || 0) * (item.quantidade || 1);
+            carrinho.forEach((item) => {
+                const subtotal = item.preco * item.quantidade;
                 total += subtotal;
-                mensagem += `${index + 1}. *${item.nome}*\n   • Tamanho: *${item.tamanho}* | Qtd: ${item.quantidade} | Subtotal: R$ ${subtotal.toFixed(2).replace('.', ',')}\n`;
+                mensagem += `• ${item.nome} (${item.tamanho}) - ${item.quantidade}x R$ ${item.preco.toFixed(2).replace('.', ',')} = R$ ${subtotal.toFixed(2).replace('.', ',')}\n`;
             });
 
-            mensagem += `\n💰 *Total a Pagar:* R$ ${total.toFixed(2).replace('.', ',')}`;
+            mensagem += `\n💰 *TOTAL:* R$ ${total.toFixed(2).replace('.', ',')}`;
 
-            const url = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
+            const url = `https://api.whatsapp.com/send?phone=${NUMERO_WHATSAPP}&text=${encodeURIComponent(mensagem)}`;
             window.open(url, '_blank');
-        }
-
-        function mostrarAviso(texto, ehAlerta = false) {
-            const box = document.getElementById('boxAvisoTamanho');
-            const span = box.querySelector('span');
-
-            span.innerHTML = texto;
-            box.classList.remove('alerta', 'sucesso');
-
-            if (ehAlerta) {
-                box.classList.add('alerta');
-            } else {
-                box.classList.add('sucesso');
-            }
-
-            box.style.display = 'flex';
-
-            if (timerAviso) clearTimeout(timerAviso);
-
-            timerAviso = setTimeout(() => {
-                box.style.display = 'none';
-            }, 3000);
         }
     </script>
 </body>
