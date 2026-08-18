@@ -14,6 +14,13 @@ body {
     min-height: 100vh;
 }
 
+/* PREVINE POPUP DE "COPIAR LINK" E SELEÇÃO AO TOCAR NO CELULAR */
+a, button, .botao-adicionar, .btn-whatsapp, .miniaturas img, .thumbs img, .galeria-thumbs img {
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
 /* REGRA PRINCIPAL: ESCONDE A TELA QUE NÃO DEVE APARECER */
 .hidden {
     display: none !important;
@@ -40,7 +47,7 @@ header {
     opacity: 0.9;
 }
 
-/* BOTÃO DO CARRINHO */
+/* BOTÃO DO CARRINHO (AUMENTADO) */
 .botao-carrinho-topo {
     background-color: white;
     color: #d81b60;
@@ -141,7 +148,7 @@ header {
     border-radius: 12px;
 }
 
-/* ESTILO DAS 3 MINIATURAS (AUMENTADAS PARA 55PX) */
+/* ESTILO DAS 3 MINIATURAS (55PX NO DESKTOP) */
 .miniaturas, .thumbs, .galeria-thumbs {
     display: flex;
     gap: 8px;
