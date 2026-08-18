@@ -141,17 +141,17 @@ header {
     border-radius: 12px;
 }
 
-/* ESTILO DAS 3 MINIATURAS EMBAIXO DA FOTO */
+/* ESTILO DAS 3 MINIATURAS (AUMENTADAS PARA 55PX) */
 .miniaturas, .thumbs, .galeria-thumbs {
     display: flex;
-    gap: 6px;
+    gap: 8px;
     justify-content: center;
     width: 100%;
 }
 
 .miniaturas img, .thumbs img, .galeria-thumbs img {
-    width: 45px !important;
-    height: 45px !important;
+    width: 55px !important;
+    height: 55px !important;
     object-fit: cover;
     border-radius: 8px;
     border: 1px solid #ffb6c1;
@@ -353,9 +353,10 @@ footer {
         margin: 0 auto;
     }
 
+    /* MINIATURAS MAIORES NO CELULAR (70PX) */
     .miniaturas img, .thumbs img, .galeria-thumbs img {
-        width: 60px !important;
-        height: 60px !important;
+        width: 70px !important;
+        height: 70px !important;
     }
 
     .produto-info {
