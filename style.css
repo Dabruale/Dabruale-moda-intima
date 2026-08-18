@@ -40,7 +40,7 @@ header {
     opacity: 0.9;
 }
 
-/* BOTÃO DO CARRINHO (AUMENTADO) */
+/* BOTÃO DO CARRINHO */
 .botao-carrinho-topo {
     background-color: white;
     color: #d81b60;
@@ -105,7 +105,7 @@ header {
     color: white;
 }
 
-/* LISTA DE PRODUTOS (COM MAIS ESPAÇO E FOTO MAIOR) */
+/* LISTA DE PRODUTOS */
 #produtos {
     display: flex;
     flex-direction: column;
@@ -120,16 +120,48 @@ header {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
-    gap: 22px; /* Maior espaçamento entre foto e texto */
+    gap: 20px;
     border: 1px solid #ffe4e8;
 }
 
-.produto img {
-    width: 130px; /* Foto mais larga */
-    height: 130px; /* Foto mais alta */
+/* CONTAINER DA FOTO PRINCIPAL E MINIATURAS */
+.produto-imagens, .galeria-produto {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* FOTO PRINCIPAL MAIOR E MAIS LARGA */
+.produto img, .foto-principal {
+    width: 150px;
+    height: 150px;
     object-fit: cover;
     border-radius: 12px;
-    flex-shrink: 0;
+}
+
+/* ESTILO DAS 3 MINIATURAS EMBAIXO DA FOTO */
+.miniaturas, .thumbs, .galeria-thumbs {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    width: 100%;
+}
+
+.miniaturas img, .thumbs img, .galeria-thumbs img {
+    width: 45px !important;
+    height: 45px !important;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #ffb6c1;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.miniaturas img:hover, .thumbs img:hover {
+    transform: scale(1.05);
+    border-color: #d81b60;
 }
 
 .produto-info {
@@ -140,7 +172,7 @@ header {
 }
 
 .produto-info h2 {
-    font-size: 1rem;
+    font-size: 1.05rem;
     font-weight: 700;
     color: #111;
     margin: 0;
@@ -153,7 +185,7 @@ header {
 }
 
 .produto-preco {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     font-weight: 800;
     color: #d81b60;
     margin-bottom: 4px;
@@ -167,7 +199,7 @@ header {
 }
 
 .seletor-tamanho {
-    padding: 4px 10px;
+    padding: 6px 12px;
     border-radius: 20px;
     border: 1px solid #d81b60;
     color: #d81b60;
@@ -183,8 +215,8 @@ header {
 }
 
 .controle-quantidade button {
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     border: 1px solid #ccc;
     background: white;
@@ -206,7 +238,7 @@ header {
     background-color: #d81b60;
     color: white;
     border: none;
-    padding: 8px 16px;
+    padding: 9px 18px;
     border-radius: 20px;
     font-weight: bold;
     font-size: 0.85rem;
@@ -255,7 +287,7 @@ header {
     color: #d81b60;
 }
 
-/* FORMULÁRIO DE ENTREGA ESTILIZADO */
+/* FORMULÁRIO DE ENTREGA */
 .form-group {
     margin-bottom: 12px;
 }
@@ -308,7 +340,6 @@ footer {
         margin: 10px auto;
     }
 
-    /* Empilha os elementos no celular para não espremer */
     .produto {
         flex-direction: column;
         align-items: stretch;
@@ -316,11 +347,15 @@ footer {
         padding: 16px;
     }
 
-    /* Imagem grande e centralizada na tela do celular */
-    .produto img {
+    .produto img, .foto-principal {
         width: 100%;
-        height: 200px;
-        margin: 0 auto 12px auto;
+        height: 220px;
+        margin: 0 auto;
+    }
+
+    .miniaturas img, .thumbs img, .galeria-thumbs img {
+        width: 60px !important;
+        height: 60px !important;
     }
 
     .produto-info {
@@ -337,7 +372,7 @@ footer {
 
     .seletor-tamanho {
         font-size: 16px;
-        padding: 8px 12px;
+        padding: 8px 14px;
     }
 
     .controle-quantidade button {
