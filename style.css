@@ -40,13 +40,15 @@ header {
     opacity: 0.9;
 }
 
+/* BOTÃO DO CARRINHO (AUMENTADO) */
 .botao-carrinho-topo {
     background-color: white;
     color: #d81b60;
     border: none;
-    padding: 8px 16px;
+    padding: 10px 20px;
     border-radius: 20px;
     font-weight: bold;
+    font-size: 1rem;
     cursor: pointer;
     transition: 0.2s;
 }
@@ -103,7 +105,7 @@ header {
     color: white;
 }
 
-/* LISTA DE PRODUTOS EMPILHADOS */
+/* LISTA DE PRODUTOS (COM MAIS ESPAÇO E FOTO MAIOR) */
 #produtos {
     display: flex;
     flex-direction: column;
@@ -113,18 +115,18 @@ header {
 .produto {
     background: white;
     border-radius: 16px;
-    padding: 12px;
+    padding: 16px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     display: flex;
     flex-direction: row;
-    align-items: center;
-    gap: 15px;
+    align-items: flex-start;
+    gap: 22px; /* Maior espaçamento entre foto e texto */
     border: 1px solid #ffe4e8;
 }
 
 .produto img {
-    width: 100px;
-    height: 100px;
+    width: 130px; /* Foto mais larga */
+    height: 130px; /* Foto mais alta */
     object-fit: cover;
     border-radius: 12px;
     flex-shrink: 0;
@@ -306,7 +308,7 @@ footer {
         margin: 10px auto;
     }
 
-    /* Reformata o card do produto para o celular */
+    /* Empilha os elementos no celular para não espremer */
     .produto {
         flex-direction: column;
         align-items: stretch;
@@ -314,18 +316,17 @@ footer {
         padding: 16px;
     }
 
-    /* Imagem do produto maior e centralizada */
+    /* Imagem grande e centralizada na tela do celular */
     .produto img {
         width: 100%;
-        height: 180px;
-        margin: 0 auto 8px auto;
+        height: 200px;
+        margin: 0 auto 12px auto;
     }
 
     .produto-info {
         align-items: center;
     }
 
-    /* Controles de tamanho e quantidade fáceis de clicar */
     .linha-controles {
         justify-content: center;
         width: 100%;
@@ -335,7 +336,7 @@ footer {
     }
 
     .seletor-tamanho {
-        font-size: 16px; /* Tamanho ideal para toque sem dar zoom */
+        font-size: 16px;
         padding: 8px 12px;
     }
 
@@ -345,7 +346,6 @@ footer {
         font-size: 1rem;
     }
 
-    /* Botão de adicionar ocupando toda a largura no celular */
     .botao-adicionar {
         width: 100%;
         padding: 12px;
@@ -353,7 +353,6 @@ footer {
         align-self: center;
     }
 
-    /* Melhora os campos de texto no celular */
     .form-group input, 
     .form-group textarea,
     .form-group select {
