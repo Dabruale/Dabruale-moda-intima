@@ -2,7 +2,7 @@
 // CONFIGURAÇÃO DO FIREBASE
 // ==========================================
 const firebaseConfig = {
-    apiKey: "AIzaSyBVCANXtuWg2IMyY3xc1l5xdQ81A621jZ0",
+    apiKey: "AIzaSyCqx6LI-yLh-wwjiSB6JsmYDHIYGG-SO4k",
     authDomain: "dabruale-a9712.firebaseapp.com",
     databaseURL: "https://dabruale-a9712-default-rtdb.firebaseio.com",
     projectId: "dabruale-a9712",
