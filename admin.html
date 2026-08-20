@@ -335,12 +335,11 @@
             <div class="card-login">
                 <h1>DABRUALE ADMIN</h1>
                 <p>Acesse com seu e-mail e senha cadastrados</p>
-                
-                <!-- Sem tag <form> para evitar recarregamento da página -->
-                <input type="email" id="email" placeholder="Seu E-mail" required>
-                <input type="password" id="senha" placeholder="Sua Senha" required>
-                <button type="button" class="btn-entrar" onclick="fazerLogin()">Acessar Painel</button>
-                
+                <form id="formLogin">
+                    <input type="email" id="email" placeholder="Seu E-mail" required>
+                    <input type="password" id="senha" placeholder="Sua Senha" required>
+                    <button type="submit" class="btn-entrar">Acessar Painel</button>
+                </form>
                 <div id="erroLogin" class="erro-login">E-mail ou senha incorretos!</div>
             </div>
         </div>
@@ -420,12 +419,12 @@
         </div>
     </div>
 
-    <!-- Scripts do Firebase completos -->
+    <!-- Scripts do Firebase compatíveis -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
-    <!-- Seu script do painel -->
+    <!-- Script de controle do painel -->
     <script src="admin.js"></script>
 </body>
 </html>
