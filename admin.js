@@ -1,4 +1,12 @@
-// CONFIGURAÇÃO DO FIREBASE
+// =========================================================
+// CONFIGURAÇÃO DO CLOUDINARY
+// =========================================================
+const CLOUD_NAME = "oudqsxxs";     
+const UPLOAD_PRESET = "dabruale"; 
+
+// =========================================================
+// CONFIGURAÇÃO DO FIREBASE (Apenas Realtime Database e Auth)
+// =========================================================
 const firebaseConfig = {
     apiKey: "AIzaSyCqx6LI-yLh-wwjiSB6JsmYDHIYGG-SO4k",
     authDomain: "dabruale-a9712.firebaseapp.com",
@@ -9,14 +17,12 @@ const firebaseConfig = {
     appId: "1:904434904806:web:..."
 };
 
-// Inicializa o Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
 const auth = firebase.auth();
 const database = firebase.database();
-const storage = firebase.storage();
 
 // ELEMENTOS DA TELA
 const loginContainer = document.getElementById('loginContainer');
@@ -38,7 +44,7 @@ const listaProdutos = document.getElementById('listaProdutos');
 const totalProdutos = document.getElementById('totalProdutos');
 const aviso = document.getElementById('aviso');
 
-// PREVIEW DAS IMAGENS
+// PREVIEW DAS IMAGENS NA TELA
 window.previewImagem = function (input, previewId) {
     const preview = document.getElementById(previewId);
     if (input.files && input.files[0]) {
@@ -51,23 +57,33 @@ window.previewImagem = function (input, previewId) {
     }
 };
 
-// FUNÇÃO PARA FAZER UPLOAD DA FOTO OU USAR URL
+// FUNÇÃO PARA FAZER UPLOAD PARA O CLOUDINARY
 async function processarImagem(fileInput, urlInput) {
-    // 1. Se foi selecionado um arquivo do computador
+    // 1. Se foi selecionado arquivo do computador
     if (fileInput && fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
-        const nomeArquivo = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9.]/g, '_');
-        const storageRef = storage.ref('produtos/' + nomeArquivo);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', UPLOAD_PRESET);
 
         try {
-            const snapshot = await storageRef.put(file);
-            const urlFinal = await snapshot.ref.getDownloadURL();
-            return urlFinal;
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.secure_url) {
+                return data.secure_url;
+            } else {
+                throw new Error(data.error ? data.error.message : "Erro desconhecido no Cloudinary");
+            }
         } catch (err) {
-            throw new Error("Falha no upload da foto: " + err.message);
+            throw new Error("Falha no upload para o Cloudinary: " + err.message);
         }
     }
-    // 2. Se apenas colou a URL
+    // 2. Se apenas colou a URL manualmente
     return urlInput ? urlInput.value.trim() : "";
 }
 
@@ -111,7 +127,7 @@ if (formProduto) {
         e.preventDefault();
 
         btnSalvar.disabled = true;
-        btnSalvar.innerText = "Enviando imagens... Aguarde!";
+        btnSalvar.innerText = "Enviando imagens para Cloudinary...";
 
         try {
             const file1 = document.getElementById('fileImagem1');
@@ -121,13 +137,13 @@ if (formProduto) {
             const file3 = document.getElementById('fileImagem3');
             const url3 = document.getElementById('imagem3');
 
-            // Processar fotos (Upload ou URL)
+            // Enviar fotos para o Cloudinary
             const img1 = await processarImagem(file1, url1);
             const img2 = await processarImagem(file2, url2);
             const img3 = await processarImagem(file3, url3);
 
             if (!img1) {
-                alert("A Foto 1 (Principal) é obrigatória! Selecione um arquivo do computador ou insira uma URL.");
+                alert("A Foto 1 (Principal) é obrigatória!");
                 btnSalvar.disabled = false;
                 btnSalvar.innerText = "Salvar Produto";
                 return;
@@ -165,7 +181,7 @@ if (formProduto) {
     });
 }
 
-// CARREGAR LISTA
+// CARREGAR LISTA DE PRODUTOS
 function carregarProdutos() {
     database.ref('produtos').on('value', (snapshot) => {
         listaProdutos.innerHTML = '';
