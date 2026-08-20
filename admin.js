@@ -1,11 +1,11 @@
 // =========================================================
 // CONFIGURAÇÃO DO CLOUDINARY
 // =========================================================
-const CLOUD_NAME = "oudqsxxs";     
-const UPLOAD_PRESET = "dabruale"; 
+const CLOUD_NAME = "oudqsxxs";  
+const UPLOAD_PRESET = "dabruale";
 
 // =========================================================
-// CONFIGURAÇÃO DO FIREBASE (Apenas Realtime Database e Auth)
+// CONFIGURAÇÃO DO FIREBASE
 // =========================================================
 const firebaseConfig = {
     apiKey: "AIzaSyCqx6LI-yLh-wwjiSB6JsmYDHIYGG-SO4k",
@@ -57,13 +57,58 @@ window.previewImagem = function (input, previewId) {
     }
 };
 
-// FUNÇÃO PARA FAZER UPLOAD PARA O CLOUDINARY
+// --- FUNÇÃO PARA COMPRIMIR IMAGEM ANTES DO UPLOAD (DEIXA SUPER RÁPIDO) ---
+function comprimirImagem(file, maxWidth = 1000, maxQuality = 0.75) {
+    return new Promise((resolve) => {
+        // Se não for imagem, retorna o arquivo original
+        if (!file.type.match(/image.*/)) {
+            resolve(file);
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    const arquivoComprimido = new File([blob], file.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+                    resolve(arquivoComprimido);
+                }, 'image/jpeg', maxQuality);
+            };
+        };
+    });
+}
+
+// --- FUNÇÃO PARA ENVIAR PARA O CLOUDINARY ---
 async function processarImagem(fileInput, urlInput) {
-    // 1. Se foi selecionado arquivo do computador
     if (fileInput && fileInput.files && fileInput.files[0]) {
-        const file = fileInput.files[0];
+        const arquivoOriginal = fileInput.files[0];
+        
+        // Comprime a imagem antes de enviar
+        const arquivoComprimido = await comprimirImagem(arquivoOriginal);
+
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', arquivoComprimido);
         formData.append('upload_preset', UPLOAD_PRESET);
 
         try {
@@ -77,13 +122,12 @@ async function processarImagem(fileInput, urlInput) {
             if (data.secure_url) {
                 return data.secure_url;
             } else {
-                throw new Error(data.error ? data.error.message : "Erro desconhecido no Cloudinary");
+                throw new Error(data.error ? data.error.message : "Erro ao responder do Cloudinary.");
             }
         } catch (err) {
-            throw new Error("Falha no upload para o Cloudinary: " + err.message);
+            throw new Error("Erro no upload: " + err.message);
         }
     }
-    // 2. Se apenas colou a URL manualmente
     return urlInput ? urlInput.value.trim() : "";
 }
 
@@ -127,7 +171,7 @@ if (formProduto) {
         e.preventDefault();
 
         btnSalvar.disabled = true;
-        btnSalvar.innerText = "Enviando imagens para Cloudinary...";
+        btnSalvar.innerText = "Otimizando e enviando fotos...";
 
         try {
             const file1 = document.getElementById('fileImagem1');
@@ -137,7 +181,7 @@ if (formProduto) {
             const file3 = document.getElementById('fileImagem3');
             const url3 = document.getElementById('imagem3');
 
-            // Enviar fotos para o Cloudinary
+            // Processar e otimizar fotos
             const img1 = await processarImagem(file1, url1);
             const img2 = await processarImagem(file2, url2);
             const img3 = await processarImagem(file3, url3);
