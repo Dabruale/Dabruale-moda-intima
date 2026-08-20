@@ -429,7 +429,13 @@
             </footer>
         </div>
     </div>
+<!-- Scripts do Firebase (necessários para a autenticação funcionar) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
+<!-- Seu script do painel deve vir DEPOIS do Firebase -->
+<script src="admin.js"></script>
     <script src="admin.js"></script>
 </body>
 </html>
