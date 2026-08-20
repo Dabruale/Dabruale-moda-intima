@@ -9,7 +9,7 @@ const firebaseConfig = {
     appId: "1:904434904806:web:..."
 };
 
-// Inicializa o Firebase se ainda não tiver sido inicializado
+// Inicializa o Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
@@ -38,7 +38,7 @@ const listaProdutos = document.getElementById('listaProdutos');
 const totalProdutos = document.getElementById('totalProdutos');
 const aviso = document.getElementById('aviso');
 
-// --- PREVIEW DAS IMAGENS SELECIONADAS DO COMPUTADOR ---
+// PREVIEW DAS IMAGENS
 window.previewImagem = function (input, previewId) {
     const preview = document.getElementById(previewId);
     if (input.files && input.files[0]) {
@@ -51,53 +51,44 @@ window.previewImagem = function (input, previewId) {
     }
 };
 
-// --- FUNÇÃO AUXILIAR PARA REALIZAR UPLOAD DO ARQUIVO OU PEGAR A URL ---
+// FUNÇÃO PARA FAZER UPLOAD DA FOTO OU USAR URL
 async function processarImagem(fileInput, urlInput) {
-    // 1. Se o usuário escolheu um arquivo do computador
-    if (fileInput.files && fileInput.files[0]) {
+    // 1. Se foi selecionado um arquivo do computador
+    if (fileInput && fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
-        const nomeUnico = Date.now() + '_' + file.name.replace(/\s+/g, '_');
-        const storageRef = storage.ref('produtos/' + nomeUnico);
-        
-        const snapshot = await storageRef.put(file);
-        const downloadUrl = await snapshot.ref.getDownloadURL();
-        return downloadUrl;
+        const nomeArquivo = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+        const storageRef = storage.ref('produtos/' + nomeArquivo);
+
+        try {
+            const snapshot = await storageRef.put(file);
+            const urlFinal = await snapshot.ref.getDownloadURL();
+            return urlFinal;
+        } catch (err) {
+            throw new Error("Falha no upload da foto: " + err.message);
+        }
     }
-    // 2. Se o usuário apenas colou um link/URL
-    return urlInput.value.trim();
+    // 2. Se apenas colou a URL
+    return urlInput ? urlInput.value.trim() : "";
 }
 
-// --- 1. EVENTO DE SUBMIT DO LOGIN ---
+// LOGIN
 if (formLogin) {
     formLogin.addEventListener('submit', function (e) {
         e.preventDefault();
-        fazerLogin();
+        const email = document.getElementById('email').value.trim();
+        const senha = document.getElementById('senha').value.trim();
+
+        erroLogin.style.display = 'none';
+
+        auth.signInWithEmailAndPassword(email, senha)
+            .catch((error) => {
+                erroLogin.style.display = 'block';
+                erroLogin.innerText = "Erro ao entrar: " + error.message;
+            });
     });
 }
 
-function fazerLogin() {
-    const email = document.getElementById('email').value.trim();
-    const senha = document.getElementById('senha').value.trim();
-
-    if (!email || !senha) {
-        alert("Por favor, preencha o e-mail e a senha.");
-        return;
-    }
-
-    erroLogin.style.display = 'none';
-
-    auth.signInWithEmailAndPassword(email, senha)
-        .then((userCredential) => {
-            console.log("Login efetuado com sucesso:", userCredential.user);
-        })
-        .catch((error) => {
-            console.error("Erro no login:", error);
-            erroLogin.style.display = 'block';
-            erroLogin.innerText = "E-mail ou senha incorretos!";
-        });
-}
-
-// --- 2. MONITOR DE AUTENTICAÇÃO DO FIREBASE ---
+// MONITOR DE AUTENTICAÇÃO
 auth.onAuthStateChanged((user) => {
     if (user) {
         loginContainer.style.display = 'none';
@@ -109,38 +100,34 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
-// --- 3. BOTÃO DE SAIR ---
+// LOGOUT
 if (btnSair) {
-    btnSair.addEventListener('click', () => {
-        auth.signOut();
-    });
+    btnSair.addEventListener('click', () => auth.signOut());
 }
 
-// --- 4. SALVAR / EDITAR PRODUTO COM UPLOAD DAS 3 FOTOS ---
+// SALVAR / ATUALIZAR PRODUTO
 if (formProduto) {
     formProduto.addEventListener('submit', async function (e) {
         e.preventDefault();
 
         btnSalvar.disabled = true;
-        btnSalvar.innerText = "Enviando fotos... Aguarde!";
+        btnSalvar.innerText = "Enviando imagens... Aguarde!";
 
         try {
             const file1 = document.getElementById('fileImagem1');
-            const url1Input = document.getElementById('imagem1');
-            
+            const url1 = document.getElementById('imagem1');
             const file2 = document.getElementById('fileImagem2');
-            const url2Input = document.getElementById('imagem2');
-
+            const url2 = document.getElementById('imagem2');
             const file3 = document.getElementById('fileImagem3');
-            const url3Input = document.getElementById('imagem3');
+            const url3 = document.getElementById('imagem3');
 
-            // Fazer upload das 3 imagens (se houver arquivos)
-            const img1 = await processarImagem(file1, url1Input);
-            const img2 = await processarImagem(file2, url2Input);
-            const img3 = await processarImagem(file3, url3Input);
+            // Processar fotos (Upload ou URL)
+            const img1 = await processarImagem(file1, url1);
+            const img2 = await processarImagem(file2, url2);
+            const img3 = await processarImagem(file3, url3);
 
             if (!img1) {
-                alert("A Foto 1 (Principal) é obrigatória!");
+                alert("A Foto 1 (Principal) é obrigatória! Selecione um arquivo do computador ou insira uma URL.");
                 btnSalvar.disabled = false;
                 btnSalvar.innerText = "Salvar Produto";
                 return;
@@ -150,7 +137,7 @@ if (formProduto) {
                 nome: nomeInput.value.trim(),
                 preco: parseFloat(precoInput.value),
                 categoria: categoriaInput.value,
-                imagem: img1,      // Imagem principal (para compatibilidade com a loja)
+                imagem: img1,
                 imagem1: img1,
                 imagem2: img2 || "",
                 imagem3: img3 || "",
@@ -160,19 +147,17 @@ if (formProduto) {
             const id = produtoId.value;
 
             if (id) {
-                // Atualizar existente
                 await database.ref('produtos/' + id).update(dadosProduto);
                 mostrarAviso("Produto atualizado com sucesso!");
             } else {
-                // Criar Novo
                 await database.ref('produtos').push(dadosProduto);
                 mostrarAviso("Produto cadastrado com sucesso!");
             }
 
             limparFormulario();
         } catch (err) {
-            console.error("Erro ao salvar produto:", err);
-            alert("Erro ao salvar produto ou imagens: " + err.message);
+            console.error("Erro completo:", err);
+            alert("ERRO AO SALVAR:\n" + err.message);
         } finally {
             btnSalvar.disabled = false;
             btnSalvar.innerText = "Salvar Produto";
@@ -180,7 +165,7 @@ if (formProduto) {
     });
 }
 
-// --- 5. CARREGAR LISTA DE PRODUTOS DO DATABASE ---
+// CARREGAR LISTA
 function carregarProdutos() {
     database.ref('produtos').on('value', (snapshot) => {
         listaProdutos.innerHTML = '';
@@ -190,7 +175,6 @@ function carregarProdutos() {
             total++;
             const id = childSnapshot.key;
             const p = childSnapshot.val();
-
             const fotoCapa = p.imagem || p.imagem1 || 'https://via.placeholder.com/60';
 
             const card = document.createElement('div');
@@ -214,13 +198,12 @@ function carregarProdutos() {
     });
 }
 
-// AUXILIAR PARA EVITAR ERROS DE ASPAS EM STRINGS
 function escapeHtml(text) {
     if (!text) return '';
     return text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
-// --- 6. FUNÇÕES DE EDIÇÃO E EXCLUSÃO ---
+// EDITAR E EXCLUIR
 window.editarProduto = function (id, nome, preco, categoria, img1, img2, img3, descricao) {
     produtoId.value = id;
     nomeInput.value = nome;
@@ -231,7 +214,6 @@ window.editarProduto = function (id, nome, preco, categoria, img1, img2, img3, d
     document.getElementById('imagem2').value = img2 || '';
     document.getElementById('imagem3').value = img3 || '';
 
-    // Mostrar prévias das imagens existentes
     const p1 = document.getElementById('preview1');
     if (img1) { p1.src = img1; p1.style.display = 'block'; } else { p1.style.display = 'none'; }
 
@@ -241,7 +223,6 @@ window.editarProduto = function (id, nome, preco, categoria, img1, img2, img3, d
     const p3 = document.getElementById('preview3');
     if (img3) { p3.src = img3; p3.style.display = 'block'; } else { p3.style.display = 'none'; }
 
-    // Limpar campos de arquivo do PC
     document.getElementById('fileImagem1').value = '';
     document.getElementById('fileImagem2').value = '';
     document.getElementById('fileImagem3').value = '';
@@ -255,9 +236,9 @@ window.editarProduto = function (id, nome, preco, categoria, img1, img2, img3, d
 };
 
 window.excluirProduto = function (id) {
-    if (confirm("Tem certeza que deseja excluir este produto?")) {
+    if (confirm("Deseja excluir este produto?")) {
         database.ref('produtos/' + id).remove()
-            .then(() => mostrarAviso("Produto removido com sucesso!"))
+            .then(() => mostrarAviso("Produto removido!"))
             .catch((err) => alert("Erro ao excluir: " + err.message));
     }
 };
@@ -269,12 +250,9 @@ if (btnCancelar) {
 function limparFormulario() {
     formProduto.reset();
     produtoId.value = '';
-    
-    // Limpar previews
     document.getElementById('preview1').style.display = 'none';
     document.getElementById('preview2').style.display = 'none';
     document.getElementById('preview3').style.display = 'none';
-
     tituloForm.innerText = "Cadastrar Novo Produto";
     btnSalvar.innerText = "Salvar Produto";
     btnCancelar.style.display = "none";
@@ -284,7 +262,5 @@ function mostrarAviso(mensagem) {
     aviso.innerText = mensagem;
     aviso.className = "aviso sucesso";
     aviso.style.display = "block";
-    setTimeout(() => {
-        aviso.style.display = "none";
-    }, 3000);
+    setTimeout(() => { aviso.style.display = "none"; }, 3000);
 }
