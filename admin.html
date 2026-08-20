@@ -201,17 +201,6 @@
         input:focus, select:focus, textarea:focus { 
             border-color: #d81b60; 
         } 
-        .btn-upload { 
-            background: #d81b60; 
-            color: white; 
-            border: none; 
-            padding: 0 12px; 
-            border-radius: 8px; 
-            font-weight: bold; 
-            font-size: 0.8rem; 
-            cursor: pointer; 
-            white-space: nowrap; 
-        } 
         .btn-salvar { 
             background-color: #d81b60; 
             color: white; 
@@ -346,11 +335,12 @@
             <div class="card-login">
                 <h1>DABRUALE ADMIN</h1>
                 <p>Acesse com seu e-mail e senha cadastrados</p>
-                <form id="formLogin">
-                    <input type="email" id="email" placeholder="Seu E-mail" required>
-                    <input type="password" id="senha" placeholder="Sua Senha" required>
-                    <button type="submit" class="btn-entrar">Acessar Painel</button>
-                </form>
+                
+                <!-- Sem tag <form> para evitar recarregamento da página -->
+                <input type="email" id="email" placeholder="Seu E-mail" required>
+                <input type="password" id="senha" placeholder="Sua Senha" required>
+                <button type="button" class="btn-entrar" onclick="fazerLogin()">Acessar Painel</button>
+                
                 <div id="erroLogin" class="erro-login">E-mail ou senha incorretos!</div>
             </div>
         </div>
