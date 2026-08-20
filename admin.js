@@ -419,12 +419,12 @@
         </div>
     </div>
 
-    <!-- Scripts do Firebase completos -->
+    <!-- Scripts do Firebase compatíveis -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
-    <!-- Seu script do painel -->
+    <!-- Script de controle do painel -->
     <script src="admin.js"></script>
 </body>
 </html>
