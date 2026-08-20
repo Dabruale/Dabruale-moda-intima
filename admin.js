@@ -16,6 +16,7 @@ if (!firebase.apps.length) {
 
 const auth = firebase.auth();
 const database = firebase.database();
+const storage = firebase.storage();
 
 // ELEMENTOS DA TELA
 const loginContainer = document.getElementById('loginContainer');
@@ -29,7 +30,6 @@ const produtoId = document.getElementById('produtoId');
 const nomeInput = document.getElementById('nome');
 const precoInput = document.getElementById('preco');
 const categoriaInput = document.getElementById('categoria');
-const imagemInput = document.getElementById('imagem');
 const descricaoInput = document.getElementById('descricao');
 const btnSalvar = document.getElementById('btnSalvar');
 const btnCancelar = document.getElementById('btnCancelar');
@@ -38,10 +38,39 @@ const listaProdutos = document.getElementById('listaProdutos');
 const totalProdutos = document.getElementById('totalProdutos');
 const aviso = document.getElementById('aviso');
 
+// --- PREVIEW DAS IMAGENS SELECIONADAS DO COMPUTADOR ---
+window.previewImagem = function (input, previewId) {
+    const preview = document.getElementById(previewId);
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+};
+
+// --- FUNÇÃO AUXILIAR PARA REALIZAR UPLOAD DO ARQUIVO OU PEGAR A URL ---
+async function processarImagem(fileInput, urlInput) {
+    // 1. Se o usuário escolheu um arquivo do computador
+    if (fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        const nomeUnico = Date.now() + '_' + file.name.replace(/\s+/g, '_');
+        const storageRef = storage.ref('produtos/' + nomeUnico);
+        
+        const snapshot = await storageRef.put(file);
+        const downloadUrl = await snapshot.ref.getDownloadURL();
+        return downloadUrl;
+    }
+    // 2. Se o usuário apenas colou um link/URL
+    return urlInput.value.trim();
+}
+
 // --- 1. EVENTO DE SUBMIT DO LOGIN ---
 if (formLogin) {
     formLogin.addEventListener('submit', function (e) {
-        e.preventDefault(); // Impede o recarregamento da página ao enviar
+        e.preventDefault();
         fazerLogin();
     });
 }
@@ -87,36 +116,66 @@ if (btnSair) {
     });
 }
 
-// --- 4. SALVAR / EDITAR PRODUTO ---
+// --- 4. SALVAR / EDITAR PRODUTO COM UPLOAD DAS 3 FOTOS ---
 if (formProduto) {
-    formProduto.addEventListener('submit', function (e) {
+    formProduto.addEventListener('submit', async function (e) {
         e.preventDefault();
 
-        const id = produtoId.value;
-        const dadosProduto = {
-            nome: nomeInput.value.trim(),
-            preco: parseFloat(precoInput.value),
-            categoria: categoriaInput.value,
-            imagem: imagemInput.value.trim(),
-            descricao: descricaoInput.value.trim()
-        };
+        btnSalvar.disabled = true;
+        btnSalvar.innerText = "Enviando fotos... Aguarde!";
 
-        if (id) {
-            // Atualizar existente
-            database.ref('produtos/' + id).update(dadosProduto)
-                .then(() => {
-                    mostrarAviso("Produto atualizado com sucesso!");
-                    limparFormulario();
-                })
-                .catch((err) => alert("Erro ao atualizar: " + err.message));
-        } else {
-            // Criar Novo
-            database.ref('produtos').push(dadosProduto)
-                .then(() => {
-                    mostrarAviso("Produto cadastrado com sucesso!");
-                    limparFormulario();
-                })
-                .catch((err) => alert("Erro ao cadastrar: " + err.message));
+        try {
+            const file1 = document.getElementById('fileImagem1');
+            const url1Input = document.getElementById('imagem1');
+            
+            const file2 = document.getElementById('fileImagem2');
+            const url2Input = document.getElementById('imagem2');
+
+            const file3 = document.getElementById('fileImagem3');
+            const url3Input = document.getElementById('imagem3');
+
+            // Fazer upload das 3 imagens (se houver arquivos)
+            const img1 = await processarImagem(file1, url1Input);
+            const img2 = await processarImagem(file2, url2Input);
+            const img3 = await processarImagem(file3, url3Input);
+
+            if (!img1) {
+                alert("A Foto 1 (Principal) é obrigatória!");
+                btnSalvar.disabled = false;
+                btnSalvar.innerText = "Salvar Produto";
+                return;
+            }
+
+            const dadosProduto = {
+                nome: nomeInput.value.trim(),
+                preco: parseFloat(precoInput.value),
+                categoria: categoriaInput.value,
+                imagem: img1,      // Imagem principal (para compatibilidade com a loja)
+                imagem1: img1,
+                imagem2: img2 || "",
+                imagem3: img3 || "",
+                descricao: descricaoInput.value.trim()
+            };
+
+            const id = produtoId.value;
+
+            if (id) {
+                // Atualizar existente
+                await database.ref('produtos/' + id).update(dadosProduto);
+                mostrarAviso("Produto atualizado com sucesso!");
+            } else {
+                // Criar Novo
+                await database.ref('produtos').push(dadosProduto);
+                mostrarAviso("Produto cadastrado com sucesso!");
+            }
+
+            limparFormulario();
+        } catch (err) {
+            console.error("Erro ao salvar produto:", err);
+            alert("Erro ao salvar produto ou imagens: " + err.message);
+        } finally {
+            btnSalvar.disabled = false;
+            btnSalvar.innerText = "Salvar Produto";
         }
     });
 }
@@ -132,17 +191,19 @@ function carregarProdutos() {
             const id = childSnapshot.key;
             const p = childSnapshot.val();
 
+            const fotoCapa = p.imagem || p.imagem1 || 'https://via.placeholder.com/60';
+
             const card = document.createElement('div');
             card.className = 'item-admin-produto';
             card.innerHTML = `
-                <img src="${p.imagem}" alt="${p.nome}">
+                <img src="${fotoCapa}" alt="${p.nome}">
                 <div class="item-info">
                     <div class="item-nome">${p.nome}</div>
                     <div class="item-detalhes">${p.categoria ? p.categoria.toUpperCase() : ''}</div>
                     <div class="item-preco">R$ ${parseFloat(p.preco).toFixed(2)}</div>
                 </div>
                 <div class="item-acoes">
-                    <button class="btn-acao btn-editar" onclick="editarProduto('${id}', '${escapeHtml(p.nome)}', ${p.preco}, '${p.categoria}', '${p.imagem}', '${escapeHtml(p.descricao || '')}')">Editar</button>
+                    <button class="btn-acao btn-editar" onclick="editarProduto('${id}', '${escapeHtml(p.nome)}', ${p.preco}, '${p.categoria}', '${p.imagem || p.imagem1 || ''}', '${p.imagem2 || ''}', '${p.imagem3 || ''}', '${escapeHtml(p.descricao || '')}')">Editar</button>
                     <button class="btn-acao btn-excluir" onclick="excluirProduto('${id}')">Excluir</button>
                 </div>
             `;
@@ -155,16 +216,36 @@ function carregarProdutos() {
 
 // AUXILIAR PARA EVITAR ERROS DE ASPAS EM STRINGS
 function escapeHtml(text) {
+    if (!text) return '';
     return text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
 // --- 6. FUNÇÕES DE EDIÇÃO E EXCLUSÃO ---
-window.editarProduto = function (id, nome, preco, categoria, imagem, descricao) {
+window.editarProduto = function (id, nome, preco, categoria, img1, img2, img3, descricao) {
     produtoId.value = id;
     nomeInput.value = nome;
     precoInput.value = preco;
     categoriaInput.value = categoria;
-    imagemInput.value = imagem;
+
+    document.getElementById('imagem1').value = img1 || '';
+    document.getElementById('imagem2').value = img2 || '';
+    document.getElementById('imagem3').value = img3 || '';
+
+    // Mostrar prévias das imagens existentes
+    const p1 = document.getElementById('preview1');
+    if (img1) { p1.src = img1; p1.style.display = 'block'; } else { p1.style.display = 'none'; }
+
+    const p2 = document.getElementById('preview2');
+    if (img2) { p2.src = img2; p2.style.display = 'block'; } else { p2.style.display = 'none'; }
+
+    const p3 = document.getElementById('preview3');
+    if (img3) { p3.src = img3; p3.style.display = 'block'; } else { p3.style.display = 'none'; }
+
+    // Limpar campos de arquivo do PC
+    document.getElementById('fileImagem1').value = '';
+    document.getElementById('fileImagem2').value = '';
+    document.getElementById('fileImagem3').value = '';
+
     descricaoInput.value = descricao;
 
     tituloForm.innerText = "Editar Produto";
@@ -188,6 +269,12 @@ if (btnCancelar) {
 function limparFormulario() {
     formProduto.reset();
     produtoId.value = '';
+    
+    // Limpar previews
+    document.getElementById('preview1').style.display = 'none';
+    document.getElementById('preview2').style.display = 'none';
+    document.getElementById('preview3').style.display = 'none';
+
     tituloForm.innerText = "Cadastrar Novo Produto";
     btnSalvar.innerText = "Salvar Produto";
     btnCancelar.style.display = "none";
