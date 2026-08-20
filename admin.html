@@ -201,11 +201,37 @@
         input:focus, select:focus, textarea:focus { 
             border-color: #d81b60; 
         } 
+
+        /* ESTILO PARA ÁREA DE UPLOAD DE FOTOS */
+        .box-foto {
+            background: #fff0f5;
+            border: 1px dashed #d81b60;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .label-sub {
+            font-size: 0.72rem;
+            color: #d81b60;
+            font-weight: bold;
+        }
+        .img-preview {
+            width: 65px;
+            height: 65px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-top: 4px;
+            border: 1px solid #ccc;
+        }
+
         .btn-salvar { 
             background-color: #d81b60; 
             color: white; 
             border: none; 
-            padding: 10px; 
+            padding: 12px; 
             border-radius: 8px; 
             font-weight: bold; 
             font-size: 0.85rem; 
@@ -216,6 +242,10 @@
         .btn-salvar:hover { 
             background-color: #c2185b; 
         } 
+        .btn-salvar:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
         .btn-cancelar { 
             background-color: #757575; 
             color: white; 
@@ -389,9 +419,33 @@
                                 </div>
                             </div>
 
+                            <!-- ÁREA DE UPLOAD DAS 3 IMAGENS -->
                             <div class="campo-grupo">
-                                <label for="imagem">URL da Imagem (Cloudinary)</label>
-                                <input type="url" id="imagem" placeholder="https://res.cloudinary.com/..." required>
+                                <label>Fotos do Produto (Até 3 Fotos)</label>
+                                
+                                <!-- Foto 1 -->
+                                <div class="box-foto">
+                                    <span class="label-sub">Foto 1 (Principal - Capa) *</span>
+                                    <input type="file" id="fileImagem1" accept="image/*" onchange="previewImagem(this, 'preview1')">
+                                    <input type="url" id="imagem1" placeholder="Ou cole a URL/link da Foto 1">
+                                    <img id="preview1" class="img-preview" src="" style="display:none;">
+                                </div>
+
+                                <!-- Foto 2 -->
+                                <div class="box-foto">
+                                    <span class="label-sub">Foto 2 (Opcional)</span>
+                                    <input type="file" id="fileImagem2" accept="image/*" onchange="previewImagem(this, 'preview2')">
+                                    <input type="url" id="imagem2" placeholder="Ou cole a URL/link da Foto 2">
+                                    <img id="preview2" class="img-preview" src="" style="display:none;">
+                                </div>
+
+                                <!-- Foto 3 -->
+                                <div class="box-foto">
+                                    <span class="label-sub">Foto 3 (Opcional)</span>
+                                    <input type="file" id="fileImagem3" accept="image/*" onchange="previewImagem(this, 'preview3')">
+                                    <input type="url" id="imagem3" placeholder="Ou cole a URL/link da Foto 3">
+                                    <img id="preview3" class="img-preview" src="" style="display:none;">
+                                </div>
                             </div>
 
                             <div class="campo-grupo">
@@ -419,10 +473,11 @@
         </div>
     </div>
 
-    <!-- Scripts do Firebase compatíveis -->
+    <!-- Scripts do Firebase compatíveis (Incluindo Firebase Storage) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
     <!-- Script de controle do painel -->
     <script src="admin.js"></script>
