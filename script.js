@@ -14,7 +14,7 @@ const firebaseConfig = {
     projectId: "dabruale-a9712",
     storageBucket: "dabruale-a9712.appspot.com",
     messagingSenderId: "904434904806",
-    appId: "1:904434904806:web:..."
+    appId: "1:904434904806:web:2054057c62bd41aa361527",
 };
 
 if (!firebase.apps.length) {
