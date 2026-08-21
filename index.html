@@ -2,7 +2,6 @@
 <html lang="pt-BR">
 
 <head>
-    <!-- Prévia para WhatsApp e Redes Sociais -->
     <meta property="og:title" content="Dabruale Moda Íntima - Catálogo">
     <meta property="og:description" content="Confira nosso catálogo completo de produtos e faça seu pedido direto pelo WhatsApp!">
     <meta property="og:image" content="https://dabruale.github.io/Dabruale-moda-intima/logo.png">
@@ -24,7 +23,7 @@
         }
 
         body {
-            background-color: #f0f0f0;
+            background-color: #fdf2f8;
             display: flex;
             justify-content: center;
             align-items: flex-start;
@@ -32,16 +31,18 @@
         }
 
         .app-container {
-            max-width: 550px;
+            max-width: 500px;
             width: 100%;
             background-color: #fdf2f8;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 0 15px rgba(0,0,0,0.08);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
             position: relative;
+            margin: 0 auto;
         }
 
+        /* HEADER EXATAMENTE IGUAL À FOTO 2 */
         header {
             background-color: #d81b60;
             color: white;
@@ -55,21 +56,16 @@
         }
 
         header h1 {
-            font-size: 1.05rem;
+            font-size: 1.1rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             font-weight: 800;
         }
 
         header p {
-            font-size: 0.7rem;
+            font-size: 0.72rem;
             opacity: 0.95;
-        }
-
-        .header-acoes {
-            display: flex;
-            gap: 6px;
-            align-items: center;
+            margin-top: 2px;
         }
 
         .carrinho-topo {
@@ -78,15 +74,13 @@
             padding: 6px 12px;
             border-radius: 20px;
             font-weight: bold;
-            font-size: 0.78rem;
+            font-size: 0.8rem;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             white-space: nowrap;
-            transition: transform 0.1s;
-        }
-
-        .carrinho-topo:active {
-            transform: scale(0.95);
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
         main {
@@ -95,7 +89,7 @@
         }
 
         .busca-container {
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .busca-container input {
@@ -104,15 +98,16 @@
             border: 1px solid #e0e0e0;
             border-radius: 20px;
             outline: none;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             background: white;
         }
 
         .categorias-container {
             display: flex;
-            flex-wrap: wrap;
             gap: 6px;
             margin-bottom: 12px;
+            overflow-x: auto;
+            padding-bottom: 4px;
         }
 
         .btn-categoria {
@@ -124,27 +119,21 @@
             font-size: 0.75rem;
             white-space: nowrap;
             cursor: pointer;
-            transition: 0.2s;
         }
 
-        .btn-categoria.ativo, .btn-categoria:hover {
+        .btn-categoria.ativo {
             background-color: #d81b60;
             color: white;
         }
 
         .aviso-tamanho-topo {
             display: none;
-            padding: 10px 14px;
-            border-radius: 10px;
+            padding: 10px;
+            border-radius: 8px;
             font-size: 0.8rem;
             text-align: center;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             font-weight: 600;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            animation: fadeIn 0.2s ease-out;
         }
 
         .aviso-tamanho-topo.alerta {
@@ -159,25 +148,21 @@
             border: 1px solid #a5d6a7;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
+        /* LISTA VERTICAL DE PRODUTOS DA FOTO 2 */
         .produtos-grid {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
             width: 100%;
         }
 
         .card-produto {
             background: white;
-            border-radius: 10px;
-            padding: 10px;
+            border-radius: 12px;
+            padding: 12px;
             display: flex;
             gap: 12px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
             align-items: flex-start;
             width: 100%;
         }
@@ -186,7 +171,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
             flex-shrink: 0;
         }
 
@@ -196,11 +181,6 @@
             object-fit: cover;
             border-radius: 8px;
             cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        .card-produto img.img-principal:hover {
-            transform: scale(1.03);
         }
 
         .miniaturas-container {
@@ -208,7 +188,6 @@
             gap: 4px;
             max-width: 85px;
             justify-content: center;
-            flex-wrap: wrap;
         }
 
         .thumb-img {
@@ -219,13 +198,11 @@
             border: 1px solid #ddd;
             cursor: pointer;
             opacity: 0.6;
-            transition: 0.2s;
         }
 
-        .thumb-img.ativa, .thumb-img:hover {
+        .thumb-img.ativa {
             opacity: 1;
             border-color: #d81b60;
-            box-shadow: 0 0 3px rgba(216, 27, 96, 0.5);
         }
 
         .detalhes-produto {
@@ -237,21 +214,23 @@
 
         .nome-produto {
             font-weight: bold;
-            font-size: 0.88rem;
-            color: #333;
+            font-size: 0.9rem;
+            color: #222;
         }
 
         .subtexto-produto {
-            font-size: 0.68rem;
+            font-size: 0.7rem;
             color: #888;
         }
 
         .preco-produto {
             color: #d81b60;
             font-weight: bold;
-            font-size: 0.92rem;
+            font-size: 0.95rem;
+            margin: 2px 0;
         }
 
+        /* ELEMENTOS DA FOTO 2: SELECT DE TAMANHO + QTD - 1 + */
         .controles-produto {
             display: flex;
             align-items: center;
@@ -260,15 +239,10 @@
             flex-wrap: wrap;
         }
 
-        .box-tamanho {
-            display: flex;
-            align-items: center;
-        }
-
         .select-tamanho {
             border: 1px solid #d81b60;
             color: #d81b60;
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 4px 8px;
             font-size: 0.75rem;
             outline: none;
@@ -280,8 +254,8 @@
         .qtd-container {
             display: flex;
             align-items: center;
-            gap: 5px;
-            font-size: 0.75rem;
+            gap: 6px;
+            font-size: 0.8rem;
             color: #444;
             font-weight: 600;
         }
@@ -298,28 +272,23 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.8rem;
-            line-height: 1;
+            font-size: 0.85rem;
         }
 
         .btn-adicionar {
             background-color: #d81b60;
             color: white;
             border: none;
-            padding: 6px 12px;
-            border-radius: 10px;
+            padding: 7px 14px;
+            border-radius: 12px;
             font-weight: bold;
-            font-size: 0.72rem;
+            font-size: 0.75rem;
             cursor: pointer;
             width: fit-content;
-            margin-top: 2px;
-            transition: background 0.2s;
+            margin-top: 4px;
         }
 
-        .btn-adicionar:hover {
-            background-color: #c2185b;
-        }
-
+        /* MODAL DO CARRINHO COM FORMULÁRIO DE ENTREGA */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -336,19 +305,13 @@
         .modal-carrinho {
             background: white;
             width: 100%;
-            max-width: 550px;
+            max-width: 500px;
             border-radius: 16px 16px 0 0;
             padding: 16px;
             max-height: 90vh;
             display: flex;
             flex-direction: column;
-            animation: slideUp 0.2s ease-out;
             overflow-y: auto;
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
         }
 
         .modal-header {
@@ -378,7 +341,7 @@
             flex-direction: column;
             gap: 8px;
             margin-bottom: 12px;
-            max-height: 200px;
+            max-height: 180px;
             overflow-y: auto;
         }
 
@@ -393,16 +356,6 @@
             border: 1px solid #f8bbd0;
         }
 
-        .item-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .item-nome {
-            font-weight: bold;
-            color: #333;
-        }
-
         .badge-tamanho {
             display: inline-block;
             background-color: #d81b60;
@@ -412,13 +365,6 @@
             font-size: 0.68rem;
             font-weight: bold;
             margin-top: 2px;
-            width: fit-content;
-        }
-
-        .item-detalhe {
-            font-size: 0.72rem;
-            color: #666;
-            margin-top: 2px;
         }
 
         .btn-remover {
@@ -426,9 +372,7 @@
             border: none;
             color: #d32f2f;
             cursor: pointer;
-            font-size: 0.85rem;
             font-weight: bold;
-            padding: 4px;
         }
 
         .dados-cliente {
@@ -443,7 +387,6 @@
         .dados-cliente h3 {
             font-size: 0.85rem;
             color: #d81b60;
-            margin-bottom: 2px;
         }
 
         .campo-linha {
@@ -474,25 +417,11 @@
             border-radius: 8px;
             font-size: 0.78rem;
             outline: none;
-            font-family: inherit;
         }
 
         .campo-grupo textarea {
             resize: vertical;
-            min-height: 45px;
-        }
-
-        .campo-grupo input:focus, .campo-grupo select:focus, .campo-grupo textarea:focus {
-            border-color: #d81b60;
-        }
-
-        .modal-footer {
-            border-top: 1px solid #eee;
-            padding-top: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: auto;
+            min-height: 40px;
         }
 
         .total-carrinho {
@@ -501,6 +430,7 @@
             font-weight: bold;
             font-size: 0.95rem;
             color: #333;
+            margin-bottom: 8px;
         }
 
         .btn-whatsapp {
@@ -513,8 +443,7 @@
             font-size: 0.85rem;
             cursor: pointer;
             text-align: center;
-            text-decoration: none;
-            display: block;
+            width: 100%;
         }
 
         .modal-foto-overlay {
@@ -525,26 +454,12 @@
             z-index: 200;
             justify-content: center;
             align-items: center;
-            padding: 16px;
         }
 
         .modal-foto-conteudo {
-            max-width: 95%;
-            max-height: 85vh;
-            border-radius: 12px;
-            object-fit: contain;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-
-        .btn-fechar-foto {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            color: white;
-            font-size: 2rem;
-            background: none;
-            border: none;
-            cursor: pointer;
+            max-width: 90%;
+            max-height: 80vh;
+            border-radius: 8px;
         }
 
         footer {
@@ -557,17 +472,19 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="app-container">
 
+        <!-- topo exatamente como na foto 2 -->
         <header>
             <div>
                 <h1>DABRUALE MODA ÍNTIMA</h1>
                 <p>Escolha seus produtos favoritos</p>
             </div>
-            <div class="header-acoes">
-                <div class="carrinho-topo" onclick="abrirCarrinho()">🛒 (<span id="countCarrinho">0</span>)</div>
+            <div class="carrinho-topo" onclick="abrirCarrinho()">
+                🛒 (<span id="countCarrinho">0</span>)
             </div>
         </header>
 
@@ -585,10 +502,6 @@
                 <button class="btn-categoria" onclick="selecionarCategoria('Camisolas', this)">Camisolas</button>
                 <button class="btn-categoria" onclick="selecionarCategoria('Pijamas', this)">Pijamas</button>
                 <button class="btn-categoria" onclick="selecionarCategoria('Cuecas', this)">Cuecas</button>
-                <button class="btn-categoria" onclick="selecionarCategoria('Meias', this)">Meias</button>
-                <button class="btn-categoria" onclick="selecionarCategoria('Cintas', this)">Cintas</button>
-                <button class="btn-categoria" onclick="selecionarCategoria('Fitness', this)">Fitness</button>
-                <button class="btn-categoria" onclick="selecionarCategoria('Biquíni', this)">Biquíni</button>
             </div>
 
             <div class="aviso-tamanho-topo" id="boxAvisoTamanho">
@@ -596,7 +509,7 @@
             </div>
 
             <div class="produtos-grid" id="gridProdutos">
-                <!-- Produtos inseridos via JavaScript -->
+                <!-- Produtos em lista estilo foto 2 -->
             </div>
         </main>
 
@@ -607,7 +520,7 @@
 
     </div>
 
-    <!-- MODAL DO CARRINHO (LISTA PRODUTOS + FORMULÁRIO DE DADOS NA MESMA TELA) -->
+    <!-- MODAL DO CARRINHO (ITENS + FORMULÁRIO DE ENTREGA) -->
     <div class="modal-overlay" id="modalCarrinho">
         <div class="modal-carrinho">
             <div class="modal-header">
@@ -615,10 +528,8 @@
                 <button class="btn-fechar" onclick="fecharCarrinho()">✕</button>
             </div>
 
-            <!-- 1. EXIBIÇÃO DOS PRODUTOS ADICIONADOS -->
             <div class="itens-carrinho" id="itensCarrinho"></div>
 
-            <!-- 2. FORMULÁRIO PARA PREENCHIMENTO DOS DADOS -->
             <div class="dados-cliente">
                 <h3>📝 Dados para Entrega</h3>
                 
@@ -670,25 +581,23 @@
                 </div>
 
                 <div class="campo-grupo">
-                    <label for="clienteObs">Observações / Detalhes do Tamanho</label>
-                    <textarea id="clienteObs" placeholder="Especifique tamanhos adicionais, preferências de cores ou detalhes da entrega aqui..."></textarea>
+                    <label for="clienteObs">Observações</label>
+                    <textarea id="clienteObs" placeholder="Especifique observações ou preferências de cores aqui..."></textarea>
                 </div>
             </div>
 
-            <div class="modal-footer">
-                <div class="total-carrinho">
-                    <span>Total:</span>
-                    <span id="valorTotalCarrinho">R$ 0,00</span>
-                </div>
-                <button class="btn-whatsapp" onclick="enviarPedidoWhatsapp()">📱 Finalizar Pedido via WhatsApp</button>
+            <div class="total-carrinho">
+                <span>Total:</span>
+                <span id="valorTotalCarrinho">R$ 0,00</span>
             </div>
+
+            <button class="btn-whatsapp" onclick="enviarPedidoWhatsapp()">📱 Finalizar Pedido via WhatsApp</button>
         </div>
     </div>
 
-    <!-- MODAL DE ZOOM DE FOTO -->
+    <!-- MODAL FOTO AMPIADA -->
     <div class="modal-foto-overlay" id="modalFotoAmpliada" onclick="fecharFotoAmpliada()">
-        <button class="btn-fechar-foto">&times;</button>
-        <img class="modal-foto-conteudo" id="imgFotoAmpliada" src="" alt="Foto ampliada">
+        <img class="modal-foto-conteudo" id="imgFotoAmpliada" src="" alt="Ampliada">
     </div>
 
     <!-- FIREBASE SDKs -->
@@ -743,25 +652,6 @@
             renderizarProdutos();
         }
 
-        function normalizarTexto(txt) {
-            return (txt || "")
-                .toString()
-                .toLowerCase()
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "")
-                .trim();
-        }
-
-        function categoriasCoincidem(catProduto, catSelecionada) {
-            if (catSelecionada === 'Todos') return true;
-            if (!catProduto) return false;
-
-            const p = normalizarTexto(catProduto);
-            const s = normalizarTexto(catSelecionada);
-
-            return p === s || p + 's' === s || s + 's' === p;
-        }
-
         function alterarQtd(id, delta) {
             const el = document.getElementById(`qtd-${id}`);
             if (!el) return;
@@ -773,9 +663,7 @@
 
         function trocarFoto(idProduto, urlNova, elThumb) {
             const imgEl = document.getElementById(`img-main-${idProduto}`);
-            if (imgEl) {
-                imgEl.src = urlNova;
-            }
+            if (imgEl) imgEl.src = urlNova;
             const card = imgEl ? imgEl.closest('.card-produto') : null;
             if (card) {
                 card.querySelectorAll('.thumb-img').forEach(t => t.classList.remove('ativa'));
@@ -784,11 +672,9 @@
         }
 
         function abrirFotoAmpliada(url) {
-            if (!url || url.includes('placeholder')) return;
-            const modal = document.getElementById('modalFotoAmpliada');
-            const img = document.getElementById('imgFotoAmpliada');
-            img.src = url;
-            modal.style.display = 'flex';
+            if (!url) return;
+            document.getElementById('imgFotoAmpliada').src = url;
+            document.getElementById('modalFotoAmpliada').style.display = 'flex';
         }
 
         function fecharFotoAmpliada() {
@@ -798,32 +684,26 @@
         function mostrarAviso(mensagem, isAlerta = false) {
             const box = document.getElementById('boxAvisoTamanho');
             if (!box) return;
-
             if (timerAviso) clearTimeout(timerAviso);
-
             box.querySelector('span').textContent = mensagem;
             box.className = `aviso-tamanho-topo ${isAlerta ? 'alerta' : 'sucesso'}`;
-            box.style.display = 'flex';
-
-            timerAviso = setTimeout(() => {
-                box.style.display = 'none';
-            }, 3000);
+            box.style.display = 'block';
+            timerAviso = setTimeout(() => { box.style.display = 'none'; }, 3000);
         }
 
         function renderizarProdutos() {
             const grid = document.getElementById("gridProdutos");
             const termoBusca = document.getElementById("inputBusca").value.toLowerCase();
-
             grid.innerHTML = "";
 
             const filtrados = todosProdutos.filter(prod => {
-                const combinaCategoria = categoriasCoincidem(prod.categoria, categoriaAtual);
+                const combinaCat = categoriaAtual === 'Todos' || (prod.categoria && prod.categoria.toLowerCase().includes(categoriaAtual.toLowerCase()));
                 const combinaBusca = (prod.nome || "").toLowerCase().includes(termoBusca);
-                return combinaCategoria && combinaBusca;
+                return combinaCat && combinaBusca;
             });
 
             if (filtrados.length === 0) {
-                grid.innerHTML = "<p style='text-align:center; padding: 20px; color: #888; font-size: 0.85rem;'>Nenhum produto encontrado nesta categoria.</p>";
+                grid.innerHTML = "<p style='text-align:center; padding:20px; color:#888; font-size:0.85rem;'>Nenhum produto encontrado.</p>";
                 return;
             }
 
@@ -837,9 +717,7 @@
                     if (prod.imagem3) listaImagens.push(prod.imagem3);
                 }
 
-                if (listaImagens.length === 0) {
-                    listaImagens.push('https://via.placeholder.com/85');
-                }
+                if (listaImagens.length === 0) listaImagens.push('https://via.placeholder.com/85');
 
                 const imgPrincipal = listaImagens[0];
                 const precoFormatado = parseFloat(prod.preco || 0).toFixed(2).replace('.', ',');
@@ -848,19 +726,14 @@
                 if (listaImagens.length > 1) {
                     htmlMiniaturas = `<div class="miniaturas-container">` + 
                         listaImagens.map((url, idx) => `
-                            <img src="${url}" class="thumb-img ${idx === 0 ? 'ativa' : ''}" onclick="trocarFoto('${prod.id}', '${url}', this)" title="Ver foto ${idx + 1}">
+                            <img src="${url}" class="thumb-img ${idx === 0 ? 'ativa' : ''}" onclick="trocarFoto('${prod.id}', '${url}', this)">
                         `).join('') + `</div>`;
                 }
 
                 let opcoesTamanho = '<option value="">Escolha o tamanho</option>';
                 if (prod.tamanhos) {
-                    const arrTamanhos = typeof prod.tamanhos === 'string' 
-                        ? prod.tamanhos.split(',').map(s => s.trim()) 
-                        : prod.tamanhos;
-                    
-                    if (Array.isArray(arrTamanhos) && arrTamanhos.length > 0) {
-                        opcoesTamanho += arrTamanhos.map(t => `<option value="${t}">${t}</option>`).join('');
-                    }
+                    const arr = typeof prod.tamanhos === 'string' ? prod.tamanhos.split(',').map(s => s.trim()) : prod.tamanhos;
+                    arr.forEach(t => { opcoesTamanho += `<option value="${t}">${t}</option>`; });
                 } else {
                     opcoesTamanho += '<option value="P">P</option><option value="M">M</option><option value="G">G</option><option value="GG">GG</option><option value="TAMANHO ÚNICO">TAMANHO ÚNICO</option>';
                 }
@@ -869,7 +742,7 @@
                 card.className = "card-produto";
                 card.innerHTML = `
                     <div class="foto-box">
-                        <img id="img-main-${prod.id}" class="img-principal" src="${imgPrincipal}" alt="${prod.nome}" onclick="abrirFotoAmpliada(this.src)" title="Clique para ampliar">
+                        <img id="img-main-${prod.id}" class="img-principal" src="${imgPrincipal}" alt="${prod.nome}" onclick="abrirFotoAmpliada(this.src)">
                         ${htmlMiniaturas}
                     </div>
                     <div class="detalhes-produto">
@@ -878,11 +751,9 @@
                         <div class="preco-produto">R$ ${precoFormatado}</div>
                         
                         <div class="controles-produto">
-                            <div class="box-tamanho">
-                                <select class="select-tamanho" id="tamanho-${prod.id}">
-                                    ${opcoesTamanho}
-                                </select>
-                            </div>
+                            <select class="select-tamanho" id="tamanho-${prod.id}">
+                                ${opcoesTamanho}
+                            </select>
                             <div class="qtd-container">
                                 <button type="button" class="btn-qtd" onclick="alterarQtd('${prod.id}', -1)">-</button>
                                 <span id="qtd-${prod.id}">1</span>
@@ -905,7 +776,7 @@
             const tamanhoSelecionado = selectTamanho ? selectTamanho.value : "";
 
             if (!tamanhoSelecionado) {
-                mostrarAviso("⚠️ Por favor, selecione o TAMANHO antes de adicionar!", true);
+                mostrarAviso("⚠️ Por favor, escolha o tamanho antes de adicionar!", true);
                 if (selectTamanho) selectTamanho.focus();
                 return;
             }
@@ -929,7 +800,7 @@
 
             salvarCarrinho();
             atualizarContadorCarrinho();
-            mostrarAviso(`✅ "${produto.nome}" (Tam: ${tamanhoSelecionado}) adicionado ao carrinho!`, false);
+            mostrarAviso(`✅ "${produto.nome}" (Tam: ${tamanhoSelecionado}) adicionado!`, false);
         }
 
         function salvarCarrinho() {
@@ -964,7 +835,7 @@
             if (!container) return;
 
             if (carrinho.length === 0) {
-                container.innerHTML = "<p style='text-align:center; color:#888; padding:15px; font-size:0.82rem;'>Seu carrinho está vazio.</p>";
+                container.innerHTML = "<p style='text-align:center; color:#888; padding:10px; font-size:0.8rem;'>Seu carrinho está vazio.</p>";
                 if (totalEl) totalEl.textContent = "R$ 0,00";
                 return;
             }
@@ -979,19 +850,17 @@
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'item-carrinho';
                 itemDiv.innerHTML = `
-                    <div class="item-info">
-                        <span class="item-nome">${item.nome}</span>
-                        <span class="badge-tamanho">Tamanho: ${item.tamanho}</span>
-                        <span class="item-detalhe">Qtd: ${item.quantidade} | R$ ${item.preco.toFixed(2).replace('.', ',')} un = R$ ${subtotal.toFixed(2).replace('.', ',')}</span>
+                    <div>
+                        <strong>${item.nome}</strong><br>
+                        <span class="badge-tamanho">Tamanho: ${item.tamanho}</span><br>
+                        <span style="font-size:0.72rem; color:#666;">Qtd: ${item.quantidade} x R$ ${item.preco.toFixed(2).replace('.', ',')}</span>
                     </div>
-                    <button class="btn-remover" onclick="removerDoCarrinho(${index})" title="Remover item">✕</button>
+                    <button class="btn-remover" onclick="removerDoCarrinho(${index})">✕</button>
                 `;
                 container.appendChild(itemDiv);
             });
 
-            if (totalEl) {
-                totalEl.textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
-            }
+            if (totalEl) totalEl.textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
         }
 
         function enviarPedidoWhatsapp() {
@@ -1023,19 +892,15 @@
             carrinho.forEach((item, index) => {
                 const subtotal = (item.preco || 0) * (item.quantidade || 1);
                 total += subtotal;
-                texto += `${index + 1}. *${item.nome}*\n`;
-                texto += `   • Tamanho: ${item.tamanho}\n`;
-                texto += `   • Qtd: ${item.quantidade} x R$ ${item.preco.toFixed(2).replace('.', ',')} = R$ ${subtotal.toFixed(2).replace('.', ',')}\n`;
+                texto += `${index + 1}. *${item.nome}*\n   • Tam: ${item.tamanho} | Qtd: ${item.quantidade} | Subtotal: R$ ${subtotal.toFixed(2).replace('.', ',')}\n`;
             });
 
             texto += `\n*TOTAL:* R$ ${total.toFixed(2).replace('.', ',')}\n\n`;
-            texto += `*DADOS DE ENTREGA:*\n`;
-            texto += `• Endereço: ${rua}, Nº ${numero}\n`;
-            texto += `• Bairro: ${bairro}\n`;
-            if (cepRef) texto += `• CEP/Ref: ${cepRef}\n`;
-            texto += `• Cidade/UF: ${cidade}/${estado}\n\n`;
-            texto += `*Forma de Pagamento:* ${pagamento}\n`;
-            if (obs) texto += `*Observações:* ${obs}\n`;
+            texto += `*ENTREGA:*\n${rua}, Nº ${numero} - ${bairro}\n`;
+            if (cepRef) texto += `Ref/CEP: ${cepRef}\n`;
+            texto += `${cidade}/${estado}\n\n`;
+            texto += `*Pagamento:* ${pagamento}\n`;
+            if (obs) texto += `*Obs:* ${obs}\n`;
 
             const link = `https://api.whatsapp.com/send?phone=${NUMERO_WHATSAPP}&text=${encodeURIComponent(texto)}`;
             window.open(link, '_blank');
