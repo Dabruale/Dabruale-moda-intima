@@ -1,15 +1,19 @@
+// =========================================================
 // CONFIGURAÇÃO DO CLOUDINARY
-const CLOUD_NAME = "oudqsxxs"; 
+// =========================================================
+const CLOUD_NAME = "oudqsxxs";  
 const UPLOAD_PRESET = "dabruale";
 
+// =========================================================
 // CONFIGURAÇÃO DO FIREBASE
-const firebaseConfig = { 
-    apiKey: "AIzaSyCqx6LI-YLh-wwjiSB6JsmYDHIYGG-SO4k", 
-    authDomain: "dabruale-a9712.firebaseapp.com", 
-    databaseURL: "https://dabruale-a9712-default-rtdb.firebaseio.com", 
-    projectId: "dabruale-a9712", 
-    storageBucket: "dabruale-a9712.appspot.com", 
-    messagingSenderId: "904434904806", 
+// =========================================================
+const firebaseConfig = {
+    apiKey: "AIzaSyCqx6LI-yLh-wwjiSB6JsmYDHIYGG-SO4k",
+    authDomain: "dabruale-a9712.firebaseapp.com",
+    databaseURL: "https://dabruale-a9712-default-rtdb.firebaseio.com",
+    projectId: "dabruale-a9712",
+    storageBucket: "dabruale-a9712.appspot.com",
+    messagingSenderId: "904434904806",
     appId: "1:904434904806:web:..."
 };
 
@@ -18,9 +22,12 @@ if (!firebase.apps.length) {
 }
 
 const auth = firebase.auth();
-const db = firebase.database();
+const database = firebase.database();
 
-// Elementos da Tela
+// Cache local de produtos para edição rápida
+let produtosCache = {};
+
+// ELEMENTOS DA TELA
 const loginContainer = document.getElementById('loginContainer');
 const adminPanel = document.getElementById('adminPanel');
 const formLogin = document.getElementById('formLogin');
@@ -28,10 +35,10 @@ const erroLogin = document.getElementById('erroLogin');
 const btnSair = document.getElementById('btnSair');
 
 const formProduto = document.getElementById('formProduto');
-const produtoIdInput = document.getElementById('produtoId');
+const produtoId = document.getElementById('produtoId');
 const nomeInput = document.getElementById('nome');
 const precoInput = document.getElementById('preco');
-const categoriaSelect = document.getElementById('categoria');
+const categoriaInput = document.getElementById('categoria');
 const descricaoInput = document.getElementById('descricao');
 const btnSalvar = document.getElementById('btnSalvar');
 const btnCancelar = document.getElementById('btnCancelar');
@@ -40,8 +47,110 @@ const listaProdutos = document.getElementById('listaProdutos');
 const totalProdutos = document.getElementById('totalProdutos');
 const aviso = document.getElementById('aviso');
 
-// --- AUTENTICAÇÃO ---
-auth.onAuthStateChanged(user => {
+// PREVIEW DAS IMAGENS NA TELA
+window.previewImagem = function (input, previewId) {
+    const preview = document.getElementById(previewId);
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+};
+
+// --- COMPRESSÃO DE IMAGEM ANTES DO UPLOAD ---
+function comprimirImagem(file, maxWidth = 1000, maxQuality = 0.75) {
+    return new Promise((resolve) => {
+        if (!file.type.match(/image.*/)) {
+            resolve(file);
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    const arquivoComprimido = new File([blob], file.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+                    resolve(arquivoComprimido);
+                }, 'image/jpeg', maxQuality);
+            };
+        };
+    });
+}
+
+// --- UPLOAD PARA CLOUDINARY ---
+async function processarImagem(fileInput, urlInput) {
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+        const arquivoOriginal = fileInput.files[0];
+        
+        const arquivoComprimido = await comprimirImagem(arquivoOriginal);
+
+        const formData = new FormData();
+        formData.append('file', arquivoComprimido);
+        formData.append('upload_preset', UPLOAD_PRESET);
+
+        try {
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.secure_url) {
+                return data.secure_url;
+            } else {
+                throw new Error(data.error ? data.error.message : "Erro ao responder do Cloudinary.");
+            }
+        } catch (err) {
+            throw new Error("Erro no upload: " + err.message);
+        }
+    }
+    return urlInput ? urlInput.value.trim() : "";
+}
+
+// LOGIN
+if (formLogin) {
+    formLogin.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const email = document.getElementById('email').value.trim();
+        const senha = document.getElementById('senha').value.trim();
+
+        erroLogin.style.display = 'none';
+
+        auth.signInWithEmailAndPassword(email, senha)
+            .catch((error) => {
+                erroLogin.style.display = 'block';
+                erroLogin.innerText = "Erro ao entrar: " + error.message;
+            });
+    });
+}
+
+// MONITOR DE AUTENTICAÇÃO
+auth.onAuthStateChanged((user) => {
     if (user) {
         loginContainer.style.display = 'none';
         adminPanel.style.display = 'flex';
@@ -52,207 +161,204 @@ auth.onAuthStateChanged(user => {
     }
 });
 
-formLogin.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const email = document.getElementById('email').value;
-    const senha = document.getElementById('senha').value;
-
-    auth.signInWithEmailAndPassword(email, senha)
-        .catch(error => {
-            erroLogin.style.display = 'block';
-            erroLogin.textContent = "Erro ao entrar: " + error.message;
-        });
-});
-
-btnSair.addEventListener('click', () => {
-    auth.signOut();
-});
-
-// --- FUNÇÃO PARA PEGAR IMAGEM (URL OU FILE BASE64) ---
-async function obterUrlImagem(fileInputId, urlInputId) {
-    const fileInput = document.getElementById(fileInputId);
-    const urlInput = document.getElementById(urlInputId);
-
-    if (fileInput && fileInput.files && fileInput.files[0]) {
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target.result);
-            reader.readAsDataURL(fileInput.files[0]);
-        });
-    } else if (urlInput && urlInput.value.trim() !== '') {
-        return urlInput.value.trim();
-    }
-    return '';
+// LOGOUT
+if (btnSair) {
+    btnSair.addEventListener('click', () => auth.signOut());
 }
 
-// Prévia de imagem local
-window.previewImagem = function(input, previewId) {
-    const preview = document.getElementById(previewId);
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-        }
-        reader.readAsDataURL(input.files[0]);
-    }
-};
+// SALVAR / ATUALIZAR PRODUTO
+if (formProduto) {
+    formProduto.addEventListener('submit', async function (e) {
+        e.preventDefault();
 
-// --- SALVAR / EDITAR PRODUTO ---
-formProduto.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    btnSalvar.disabled = true;
-    btnSalvar.textContent = "Salvando...";
+        btnSalvar.disabled = true;
+        btnSalvar.innerText = "Otimizando e enviando fotos...";
 
-    const checkboxesTamanhos = document.querySelectorAll('input[name="tamanhos"]:checked');
-    const tamanhosSelecionados = Array.from(checkboxesTamanhos).map(cb => cb.value);
+        try {
+            const file1 = document.getElementById('fileImagem1');
+            const url1 = document.getElementById('imagem1');
+            const file2 = document.getElementById('fileImagem2');
+            const url2 = document.getElementById('imagem2');
+            const file3 = document.getElementById('fileImagem3');
+            const url3 = document.getElementById('imagem3');
 
-    const img1 = await obterUrlImagem('fileImagem1', 'imagem1');
-    const img2 = await obterUrlImagem('fileImagem2', 'imagem2');
-    const img3 = await obterUrlImagem('fileImagem3', 'imagem3');
+            // Processar e otimizar fotos
+            const img1 = await processarImagem(file1, url1);
+            const img2 = await processarImagem(file2, url2);
+            const img3 = await processarImagem(file3, url3);
 
-    const id = produtoIdInput.value;
-    const dadosProduto = {
-        nome: nomeInput.value,
-        preco: parseFloat(precoInput.value),
-        categoria: categoriaSelect.value,
-        tamanhos: tamanhosSelecionados.length > 0 ? tamanhosSelecionados : ['Único'],
-        descricao: descricaoInput.value,
-        imagem1: img1,
-        imagem2: img2,
-        imagem3: img3
-    };
-
-    if (id) {
-        db.ref('produtos/' + id).update(dadosProduto)
-            .then(() => mostrarAviso("Produto atualizado com sucesso!"))
-            .finally(() => resetarFormulario());
-    } else {
-        db.ref('produtos').push(dadosProduto)
-            .then(() => mostrarAviso("Produto cadastrado com sucesso!"))
-            .finally(() => resetarFormulario());
-    }
-});
-
-// --- CARREGAR E EXIBIR PRODUTOS ---
-function carregarProdutos() {
-    db.ref('produtos').on('value', snapshot => {
-        listaProdutos.innerHTML = '';
-        let total = 0;
-
-        snapshot.forEach(childSnapshot => {
-            total++;
-            const prod = childSnapshot.val();
-            const key = childSnapshot.key;
-
-            let tamanhosTexto = 'Único';
-            if (Array.isArray(prod.tamanhos)) {
-                tamanhosTexto = prod.tamanhos.join(', ');
-            } else if (typeof prod.tamanhos === 'string') {
-                tamanhosTexto = prod.tamanhos;
+            if (!img1) {
+                alert("A Foto 1 (Principal) é obrigatória!");
+                btnSalvar.disabled = false;
+                btnSalvar.innerText = "Salvar Produto";
+                return;
             }
 
-            const fotoCapa = prod.imagem1 || prod.imagem || 'https://via.placeholder.com/60';
+            // Captura os tamanhos selecionados nos checkboxes
+            const checkboxesTamanhos = document.querySelectorAll('input[name="tamanhos"]:checked');
+            const tamanhosSelecionados = Array.from(checkboxesTamanhos).map(cb => cb.value);
+
+            const dadosProduto = {
+                nome: nomeInput.value.trim(),
+                preco: parseFloat(precoInput.value),
+                categoria: categoriaInput.value,
+                tamanhos: tamanhosSelecionados.length > 0 ? tamanhosSelecionados : ["Tamanho Único"],
+                imagem: img1,
+                imagem1: img1,
+                imagem2: img2 || "",
+                imagem3: img3 || "",
+                descricao: descricaoInput.value.trim()
+            };
+
+            const id = produtoId.value;
+
+            if (id) {
+                await database.ref('produtos/' + id).update(dadosProduto);
+                mostrarAviso("Produto atualizado com sucesso!");
+            } else {
+                await database.ref('produtos').push(dadosProduto);
+                mostrarAviso("Produto cadastrado com sucesso!");
+            }
+
+            limparFormulario();
+        } catch (err) {
+            console.error("Erro completo:", err);
+            alert("ERRO AO SALVAR:\n" + err.message);
+        } finally {
+            btnSalvar.disabled = false;
+            btnSalvar.innerText = "Salvar Produto";
+        }
+    });
+}
+
+// CARREGAR LISTA DE PRODUTOS
+function carregarProdutos() {
+    database.ref('produtos').on('value', (snapshot) => {
+        listaProdutos.innerHTML = '';
+        totalProdutos.innerText = '0';
+        produtosCache = {};
+        let total = 0;
+
+        snapshot.forEach((childSnapshot) => {
+            total++;
+            const id = childSnapshot.key;
+            const p = childSnapshot.val();
+            produtosCache[id] = p;
+
+            const fotoCapa = p.imagem || p.imagem1 || 'https://via.placeholder.com/60';
+            
+            // Tratamento flexível de tamanhos (suporta Arrays e cadastros antigos em Texto)
+            let listaTamanhos = 'Único';
+            if (Array.isArray(p.tamanhos) && p.tamanhos.length > 0) {
+                listaTamanhos = p.tamanhos.join(', ');
+            } else if (typeof p.tamanhos === 'string' && p.tamanhos.trim() !== '') {
+                listaTamanhos = p.tamanhos;
+            }
 
             const card = document.createElement('div');
             card.className = 'item-admin-produto';
             card.innerHTML = `
-                <img src="${fotoCapa}" alt="${prod.nome}">
+                <img src="${fotoCapa}" alt="${p.nome}">
                 <div class="item-info">
-                    <div class="item-nome">${prod.nome}</div>
-                    <div class="item-detalhes">${(prod.categoria || '').toUpperCase()} | Tamanhos: <strong>${tamanhosTexto}</strong></div>
-                    <div class="item-preco">R$ ${parseFloat(prod.preco || 0).toFixed(2)}</div>
+                    <div class="item-nome">${p.nome}</div>
+                    <div class="item-detalhes">${p.categoria ? p.categoria.toUpperCase() : ''} | Tamanhos: <strong>${listaTamanhos}</strong></div>
+                    <div class="item-preco">R$ ${parseFloat(p.preco).toFixed(2)}</div>
                 </div>
                 <div class="item-acoes">
-                    <button class="btn-acao btn-editar" onclick="prepararEdicao('${key}')">Editar</button>
-                    <button class="btn-acao btn-excluir" onclick="excluirProduto('${key}')">Excluir</button>
+                    <button class="btn-acao btn-editar" onclick="editarProduto('${id}')">Editar</button>
+                    <button class="btn-acao btn-excluir" onclick="excluirProduto('${id}')">Excluir</button>
                 </div>
             `;
             listaProdutos.appendChild(card);
         });
 
-        totalProdutos.textContent = total;
+        totalProdutos.innerText = total;
     });
 }
 
-// --- PREPARAR EDIÇÃO ---
-window.prepararEdicao = function(id) {
-    db.ref('produtos/' + id).once('value').then(snapshot => {
-        const prod = snapshot.val();
-        if (!prod) return;
+// EDITAR PRODUTO
+window.editarProduto = function (id) {
+    const p = produtosCache[id];
+    if (!p) return;
 
-        produtoIdInput.value = id;
-        nomeInput.value = prod.nome || '';
-        precoInput.value = prod.preco || '';
-        categoriaSelect.value = prod.categoria || '';
-        descricaoInput.value = prod.descricao || '';
+    produtoId.value = id;
+    nomeInput.value = p.nome || '';
+    precoInput.value = p.preco || '';
+    categoriaInput.value = p.categoria || '';
 
-        const tamanhosSalvos = Array.isArray(prod.tamanhos) 
-            ? prod.tamanhos 
-            : (prod.tamanhos ? prod.tamanhos.split(',').map(s => s.trim()) : []);
+    // Limpar todas as caixas de seleção primeiro
+    document.querySelectorAll('input[name="tamanhos"]').forEach(cb => cb.checked = false);
 
-        document.querySelectorAll('input[name="tamanhos"]').forEach(cb => {
-            cb.checked = tamanhosSalvos.includes(cb.value);
-        });
+    // Normalizar a leitura dos tamanhos salvos
+    let tamanhosParaMarcar = [];
+    if (Array.isArray(p.tamanhos)) {
+        tamanhosParaMarcar = p.tamanhos;
+    } else if (typeof p.tamanhos === 'string') {
+        tamanhosParaMarcar = p.tamanhos.split(',').map(s => s.trim());
+    }
 
-        document.getElementById('imagem1').value = prod.imagem1 || prod.imagem || '';
-        document.getElementById('imagem2').value = prod.imagem2 || '';
-        document.getElementById('imagem3').value = prod.imagem3 || '';
-
-        if (prod.imagem1 || prod.imagem) {
-            document.getElementById('preview1').src = prod.imagem1 || prod.imagem;
-            document.getElementById('preview1').style.display = 'block';
-        }
-        if (prod.imagem2) {
-            document.getElementById('preview2').src = prod.imagem2;
-            document.getElementById('preview2').style.display = 'block';
-        }
-        if (prod.imagem3) {
-            document.getElementById('preview3').src = prod.imagem3;
-            document.getElementById('preview3').style.display = 'block';
-        }
-
-        tituloForm.textContent = "Editar Produto";
-        btnCancelar.style.display = 'block';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Marcar no formulário os tamanhos encontrados
+    tamanhosParaMarcar.forEach(tam => {
+        const cb = document.querySelector(`input[name="tamanhos"][value="${tam}"]`);
+        if (cb) cb.checked = true;
     });
+
+    document.getElementById('imagem1').value = p.imagem1 || p.imagem || '';
+    document.getElementById('imagem2').value = p.imagem2 || '';
+    document.getElementById('imagem3').value = p.imagem3 || '';
+
+    const p1 = document.getElementById('preview1');
+    if (p.imagem1 || p.imagem) { p1.src = p.imagem1 || p.imagem; p1.style.display = 'block'; } else { p1.style.display = 'none'; }
+
+    const p2 = document.getElementById('preview2');
+    if (p.imagem2) { p2.src = p.imagem2; p2.style.display = 'block'; } else { p2.style.display = 'none'; }
+
+    const p3 = document.getElementById('preview3');
+    if (p.imagem3) { p3.src = p.imagem3; p3.style.display = 'block'; } else { p3.style.display = 'none'; }
+
+    document.getElementById('fileImagem1').value = '';
+    document.getElementById('fileImagem2').value = '';
+    document.getElementById('fileImagem3').value = '';
+
+    descricaoInput.value = p.descricao || '';
+
+    tituloForm.innerText = "Editar Produto";
+    btnSalvar.innerText = "Atualizar Produto";
+    btnCancelar.style.display = "block";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-// --- EXCLUIR PRODUTO ---
-window.excluirProduto = function(id) {
-    if (confirm("Tem certeza que deseja excluir este produto?")) {
-        db.ref('produtos/' + id).remove()
-            .then(() => mostrarAviso("Produto excluído com sucesso!"));
+// EXCLUIR PRODUTO
+window.excluirProduto = function (id) {
+    if (confirm("Deseja excluir este produto?")) {
+        database.ref('produtos/' + id).remove()
+            .then(() => mostrarAviso("Produto removido!"))
+            .catch((err) => alert("Erro ao excluir: " + err.message));
     }
 };
 
-btnCancelar.addEventListener('click', resetarFormulario);
+if (btnCancelar) {
+    btnCancelar.addEventListener('click', limparFormulario);
+}
 
-function resetarFormulario() {
-    produtoIdInput.value = '';
+function limparFormulario() {
     formProduto.reset();
+    produtoId.value = '';
     
     document.querySelectorAll('input[name="tamanhos"]').forEach(cb => cb.checked = false);
 
-    ['preview1', 'preview2', 'preview3'].forEach(id => {
-        const p = document.getElementById(id);
-        if (p) {
-            p.src = '';
-            p.style.display = 'none';
-        }
-    });
+    document.getElementById('preview1').style.display = 'none';
+    document.getElementById('preview2').style.display = 'none';
+    document.getElementById('preview3').style.display = 'none';
 
-    tituloForm.textContent = "Cadastrar Novo Produto";
-    btnCancelar.style.display = 'none';
-    btnSalvar.disabled = false;
-    btnSalvar.textContent = "Salvar Produto";
+    tituloForm.innerText = "Cadastrar Novo Produto";
+    btnSalvar.innerText = "Salvar Produto";
+    btnCancelar.style.display = "none";
 }
 
-function mostrarAviso(msg) {
-    aviso.textContent = msg;
+function mostrarAviso(mensagem) {
+    aviso.innerText = mensagem;
     aviso.className = "aviso sucesso";
     aviso.style.display = "block";
-    setTimeout(() => {
-        aviso.style.display = "none";
-    }, 3000);
+    setTimeout(() => { aviso.style.display = "none"; }, 3000);
 }
