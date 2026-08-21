@@ -500,6 +500,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
     <!-- Script de controle do painel -->
-    <script src="admin.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
