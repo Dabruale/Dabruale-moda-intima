@@ -419,6 +419,25 @@
                                 </div>
                             </div>
 
+                            <!-- SELEÇÃO DE TAMANHOS DINÂMICOS -->
+                            <div class="campo-grupo">
+                                <label>Tamanhos Disponíveis</label>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 8px; background: #fff; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
+                                    <label style="font-size: 0.85rem; cursor: pointer; font-weight: normal;"><input type="checkbox" name="tamanhos" value="P"> P</label>
+                                    <label style="font-size: 0.85rem; cursor: pointer; font-weight: normal;"><input type="checkbox" name="tamanhos" value="M"> M</label>
+                                    <label style="font-size: 0.85rem; cursor: pointer; font-weight: normal;"><input type="checkbox" name="tamanhos" value="G"> G</label>
+                                    <label style="font-size: 0.85rem; cursor: pointer; font-weight: normal;"><input type="checkbox" name="tamanhos" value="GG"> GG</label>
+                                    <label style="font-size: 0.85rem; cursor: pointer; font-weight: normal;"><input type="checkbox" name="tamanhos" value="XG"> XG</label>
+                                    <label style="font-size: 0.85rem; cursor: pointer; font-weight: normal;"><input type="checkbox" name="tamanhos" value="XXG"> XXG</label>
+                                    <label style="font-size: 0.85rem; cursor: pointer; font-weight: normal;"><input type="checkbox" name="tamanhos" value="Tamanho Único"> Único</label>
+                                    <label style="font-size: 0.85rem; cursor: pointer; font-weight: normal;"><input type="checkbox" name="tamanhos" value="48"> 48</label>
+                                    <label style="font-size: 0.85rem; cursor: pointer; font-weight: normal;"><input type="checkbox" name="tamanhos" value="50"> 50</label>
+                                    <label style="font-size: 0.85rem; cursor: pointer; font-weight: normal;"><input type="checkbox" name="tamanhos" value="52"> 52</label>
+                                    <label style="font-size: 0.85rem; cursor: pointer; font-weight: normal;"><input type="checkbox" name="tamanhos" value="54"> 54</label>
+                                    <label style="font-size: 0.85rem; cursor: pointer; font-weight: normal;"><input type="checkbox" name="tamanhos" value="56"> 56</label>
+                                </div>
+                            </div>
+
                             <!-- ÁREA DE UPLOAD DAS 3 IMAGENS -->
                             <div class="campo-grupo">
                                 <label>Fotos do Produto (Até 3 Fotos)</label>
@@ -449,8 +468,8 @@
                             </div>
 
                             <div class="campo-grupo">
-                                <label for="descricao">Descrição / Tamanhos Disponíveis</label>
-                                <textarea id="descricao" rows="3" placeholder="Tamanhos: P, M, G. Tecido de renda super macio..."></textarea>
+                                <label for="descricao">Descrição / Detalhes</label>
+                                <textarea id="descricao" rows="3" placeholder="Tecido de renda super macio, alta durabilidade..."></textarea>
                             </div>
 
                             <button type="submit" class="btn-salvar" id="btnSalvar">Salvar Produto</button>
