@@ -24,6 +24,9 @@ if (!firebase.apps.length) {
 const auth = firebase.auth();
 const database = firebase.database();
 
+// Guarda os dados dos produtos em memória para facilitar a edição
+let produtosCache = {};
+
 // ELEMENTOS DA TELA
 const loginContainer = document.getElementById('loginContainer');
 const adminPanel = document.getElementById('adminPanel');
@@ -60,7 +63,6 @@ window.previewImagem = function (input, previewId) {
 // --- FUNÇÃO PARA COMPRIMIR IMAGEM ANTES DO UPLOAD (DEIXA SUPER RÁPIDO) ---
 function comprimirImagem(file, maxWidth = 1000, maxQuality = 0.75) {
     return new Promise((resolve) => {
-        // Se não for imagem, retorna o arquivo original
         if (!file.type.match(/image.*/)) {
             resolve(file);
             return;
@@ -193,10 +195,15 @@ if (formProduto) {
                 return;
             }
 
+            // Capturar os tamanhos marcados
+            const checkboxesTamanhos = document.querySelectorAll('input[name="tamanhos"]:checked');
+            const tamanhosSelecionados = Array.from(checkboxesTamanhos).map(cb => cb.value);
+
             const dadosProduto = {
                 nome: nomeInput.value.trim(),
                 preco: parseFloat(precoInput.value),
                 categoria: categoriaInput.value,
+                tamanhos: tamanhosSelecionados.length > 0 ? tamanhosSelecionados : ["Tamanho Único"],
                 imagem: img1,
                 imagem1: img1,
                 imagem2: img2 || "",
@@ -229,13 +236,18 @@ if (formProduto) {
 function carregarProdutos() {
     database.ref('produtos').on('value', (snapshot) => {
         listaProdutos.innerHTML = '';
+        totalProdutos.innerText = '0';
+        produtosCache = {}; // Limpa cache
         let total = 0;
 
         snapshot.forEach((childSnapshot) => {
             total++;
             const id = childSnapshot.key;
             const p = childSnapshot.val();
+            produtosCache[id] = p; // Guarda no cache local
+
             const fotoCapa = p.imagem || p.imagem1 || 'https://via.placeholder.com/60';
+            const listaTamanhos = p.tamanhos && Array.isArray(p.tamanhos) ? p.tamanhos.join(', ') : 'Único';
 
             const card = document.createElement('div');
             card.className = 'item-admin-produto';
@@ -243,11 +255,11 @@ function carregarProdutos() {
                 <img src="${fotoCapa}" alt="${p.nome}">
                 <div class="item-info">
                     <div class="item-nome">${p.nome}</div>
-                    <div class="item-detalhes">${p.categoria ? p.categoria.toUpperCase() : ''}</div>
+                    <div class="item-detalhes">${p.categoria ? p.categoria.toUpperCase() : ''} | Tamanhos: ${listaTamanhos}</div>
                     <div class="item-preco">R$ ${parseFloat(p.preco).toFixed(2)}</div>
                 </div>
                 <div class="item-acoes">
-                    <button class="btn-acao btn-editar" onclick="editarProduto('${id}', '${escapeHtml(p.nome)}', ${p.preco}, '${p.categoria}', '${p.imagem || p.imagem1 || ''}', '${p.imagem2 || ''}', '${p.imagem3 || ''}', '${escapeHtml(p.descricao || '')}')">Editar</button>
+                    <button class="btn-acao btn-editar" onclick="editarProduto('${id}')">Editar</button>
                     <button class="btn-acao btn-excluir" onclick="excluirProduto('${id}')">Excluir</button>
                 </div>
             `;
@@ -263,31 +275,43 @@ function escapeHtml(text) {
     return text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
-// EDITAR E EXCLUIR
-window.editarProduto = function (id, nome, preco, categoria, img1, img2, img3, descricao) {
-    produtoId.value = id;
-    nomeInput.value = nome;
-    precoInput.value = preco;
-    categoriaInput.value = categoria;
+// EDITAR PRODUTO
+window.editarProduto = function (id) {
+    const p = produtosCache[id];
+    if (!p) return;
 
-    document.getElementById('imagem1').value = img1 || '';
-    document.getElementById('imagem2').value = img2 || '';
-    document.getElementById('imagem3').value = img3 || '';
+    produtoId.value = id;
+    nomeInput.value = p.nome || '';
+    precoInput.value = p.preco || '';
+    categoriaInput.value = p.categoria || '';
+
+    // Marcadores de tamanho
+    document.querySelectorAll('input[name="tamanhos"]').forEach(cb => cb.checked = false);
+    if (p.tamanhos && Array.isArray(p.tamanhos)) {
+        p.tamanhos.forEach(tam => {
+            const cb = document.querySelector(`input[name="tamanhos"][value="${tam}"]`);
+            if (cb) cb.checked = true;
+        });
+    }
+
+    document.getElementById('imagem1').value = p.imagem1 || p.imagem || '';
+    document.getElementById('imagem2').value = p.imagem2 || '';
+    document.getElementById('imagem3').value = p.imagem3 || '';
 
     const p1 = document.getElementById('preview1');
-    if (img1) { p1.src = img1; p1.style.display = 'block'; } else { p1.style.display = 'none'; }
+    if (p.imagem1 || p.imagem) { p1.src = p.imagem1 || p.imagem; p1.style.display = 'block'; } else { p1.style.display = 'none'; }
 
     const p2 = document.getElementById('preview2');
-    if (img2) { p2.src = img2; p2.style.display = 'block'; } else { p2.style.display = 'none'; }
+    if (p.imagem2) { p2.src = p.imagem2; p2.style.display = 'block'; } else { p2.style.display = 'none'; }
 
     const p3 = document.getElementById('preview3');
-    if (img3) { p3.src = img3; p3.style.display = 'block'; } else { p3.style.display = 'none'; }
+    if (p.imagem3) { p3.src = p.imagem3; p3.style.display = 'block'; } else { p3.style.display = 'none'; }
 
     document.getElementById('fileImagem1').value = '';
     document.getElementById('fileImagem2').value = '';
     document.getElementById('fileImagem3').value = '';
 
-    descricaoInput.value = descricao;
+    descricaoInput.value = p.descricao || '';
 
     tituloForm.innerText = "Editar Produto";
     btnSalvar.innerText = "Atualizar Produto";
@@ -295,6 +319,7 @@ window.editarProduto = function (id, nome, preco, categoria, img1, img2, img3, d
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
+// EXCLUIR PRODUTO
 window.excluirProduto = function (id) {
     if (confirm("Deseja excluir este produto?")) {
         database.ref('produtos/' + id).remove()
@@ -310,9 +335,14 @@ if (btnCancelar) {
 function limparFormulario() {
     formProduto.reset();
     produtoId.value = '';
+    
+    // Desmarca todos os tamanhos
+    document.querySelectorAll('input[name="tamanhos"]').forEach(cb => cb.checked = false);
+
     document.getElementById('preview1').style.display = 'none';
     document.getElementById('preview2').style.display = 'none';
     document.getElementById('preview3').style.display = 'none';
+
     tituloForm.innerText = "Cadastrar Novo Produto";
     btnSalvar.innerText = "Salvar Produto";
     btnCancelar.style.display = "none";
