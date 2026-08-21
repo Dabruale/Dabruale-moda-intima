@@ -1,14 +1,16 @@
-// ==========================================
+// CONFIGURAÇÃO DO CLOUDINARY
+const CLOUD_NAME = "oudqsxxs"; 
+const UPLOAD_PRESET = "dabruale";
+
 // CONFIGURAÇÃO DO FIREBASE
-// ==========================================
-const firebaseConfig = {
-    apiKey: "AIzaSyCqx6LI-yLh-wwjiSB6JsmYDHIYGG-SO4k",
-    authDomain: "dabruale-a9712.firebaseapp.com",
-    databaseURL: "https://dabruale-a9712-default-rtdb.firebaseio.com",
-    projectId: "dabruale-a9712",
-    storageBucket: "dabruale-a9712.firebasestorage.app",
-    messagingSenderId: "904434904806",
-    appId: "1:904434904806:web:2054057c62bd41aa361527"
+const firebaseConfig = { 
+    apiKey: "AIzaSyCqx6LI-YLh-wwjiSB6JsmYDHIYGG-SO4k", 
+    authDomain: "dabruale-a9712.firebaseapp.com", 
+    databaseURL: "https://dabruale-a9712-default-rtdb.firebaseio.com", 
+    projectId: "dabruale-a9712", 
+    storageBucket: "dabruale-a9712.appspot.com", 
+    messagingSenderId: "904434904806", 
+    appId: "1:904434904806:web:..." 
 };
 
 if (!firebase.apps.length) {
@@ -17,305 +19,240 @@ if (!firebase.apps.length) {
 
 const auth = firebase.auth();
 const db = firebase.database();
-let listaProdutosGlobal = [];
-const NUMERO_WHATSAPP = "5565996719068";
 
-// MONITORA SE O USUÁRIO ESTÁ LOGADO
-auth.onAuthStateChanged((user) => {
-    const loginContainer = document.getElementById("loginContainer");
-    const adminPanel = document.getElementById("adminPanel");
+// Elementos da Tela
+const loginContainer = document.getElementById('loginContainer');
+const adminPanel = document.getElementById('adminPanel');
+const formLogin = document.getElementById('formLogin');
+const erroLogin = document.getElementById('erroLogin');
+const btnSair = document.getElementById('btnSair');
 
+const formProduto = document.getElementById('formProduto');
+const produtoIdInput = document.getElementById('produtoId');
+const nomeInput = document.getElementById('nome');
+const precoInput = document.getElementById('preco');
+const categoriaSelect = document.getElementById('categoria');
+const descricaoInput = document.getElementById('descricao');
+const btnSalvar = document.getElementById('btnSalvar');
+const btnCancelar = document.getElementById('btnCancelar');
+const tituloForm = document.getElementById('tituloForm');
+const listaProdutos = document.getElementById('listaProdutos');
+const totalProdutos = document.getElementById('totalProdutos');
+const aviso = document.getElementById('aviso');
+
+// --- AUTENTICAÇÃO ---
+auth.onAuthStateChanged(user => {
     if (user) {
-        if (loginContainer) loginContainer.style.display = "none";
-        if (adminPanel) adminPanel.style.display = "flex";
+        loginContainer.style.display = 'none';
+        adminPanel.style.display = 'flex';
         carregarProdutos();
     } else {
-        if (loginContainer) loginContainer.style.display = "flex";
-        if (adminPanel) adminPanel.style.display = "none";
+        loginContainer.style.display = 'flex';
+        adminPanel.style.display = 'none';
     }
 });
 
-// ==========================================
-// AUTENTICAÇÃO / LOGIN
-// ==========================================
-function fazerLoginFirebase(e) {
-    if (e) e.preventDefault();
-    const email = document.getElementById("emailInput").value.trim();
-    const senha = document.getElementById("senhaInput").value;
-    const msgErro = document.getElementById("msgErro");
-    const btnEntrar = document.getElementById("btnEntrar");
+formLogin.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const senha = document.getElementById('senha').value;
 
-    if (btnEntrar) {
-        btnEntrar.textContent = "Verificando...";
-        btnEntrar.disabled = true;
-    }
-
-    auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
-        .then(() => {
-            return auth.signInWithEmailAndPassword(email, senha);
-        })
-        .then(() => {
-            if (msgErro) msgErro.style.display = "none";
-        })
-        .catch((error) => {
-            if (msgErro) {
-                msgErro.textContent = "E-mail ou senha inválidos!";
-                msgErro.style.display = "block";
-            }
-        })
-        .finally(() => {
-            if (btnEntrar) {
-                btnEntrar.textContent = "Acessar Painel";
-                btnEntrar.disabled = false;
-            }
+    auth.signInWithEmailAndPassword(email, senha)
+        .catch(error => {
+            erroLogin.style.display = 'block';
+            erroLogin.textContent = "Erro ao entrar: " + error.message;
         });
-}
+});
 
-function fazerLogoutFirebase() {
+btnSair.addEventListener('click', () => {
     auth.signOut();
-}
+});
 
-// ==========================================
-// UPLOAD DE FOTO DIRETO PARA O CLOUDINARY
-// ==========================================
-async function carregarFotoLocal(event) {
-    const file = event.target.files[0];
-    const status = document.getElementById("statusFoto");
+// --- FUNÇÃO PARA PEGAR IMAGEM (URL OU FILE BASE64) ---
+async function obterUrlImagem(fileInputId, urlInputId) {
+    const fileInput = document.getElementById(fileInputId);
+    const urlInput = document.getElementById(urlInputId);
 
-    if (!file) return;
-
-    if (status) {
-        status.style.display = "block";
-        status.style.color = "#d81b60";
-        status.textContent = "⏳ Enviando imagem para o Cloudinary...";
-    }
-
-    const cloudName = "oudqsxxs";
-    const uploadPreset = "dabruale";
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", uploadPreset);
-
-    try {
-        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-            method: "POST",
-            body: formData
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.readAsDataURL(fileInput.files[0]);
         });
-
-        const data = await response.json();
-
-        if (data.secure_url) {
-            document.getElementById("imagem").value = data.secure_url;
-            if (status) {
-                status.style.color = "#2e7d32";
-                status.textContent = "✅ Foto enviada e link salvo no Cloudinary!";
-            }
-        } else {
-            throw new Error(data.error ? data.error.message : "Falha no envio");
-        }
-    } catch (err) {
-        if (status) {
-            status.style.color = "#d32f2f";
-            status.textContent = "❌ Erro ao enviar foto: " + err.message;
-        }
+    } else if (urlInput && urlInput.value.trim() !== '') {
+        return urlInput.value.trim();
     }
+    return '';
 }
 
-// ==========================================
-// GERENCIAMENTO DE PRODUTOS
-// ==========================================
-function carregarProdutos() {
-    db.ref("produtos").on("value", (snapshot) => {
-        listaProdutosGlobal = [];
-        snapshot.forEach((child) => {
-            listaProdutosGlobal.push({
-                id: child.key,
-                ...child.val()
-            });
-        });
-        renderizarLista();
-    });
-}
-
-function renderizarLista() {
-    const container = document.getElementById("listaProdutos");
-    const badgeTotal = document.getElementById("totalProdutos");
-    
-    if (badgeTotal) badgeTotal.textContent = listaProdutosGlobal.length;
-    if (!container) return;
-
-    container.innerHTML = "";
-
-    if (listaProdutosGlobal.length === 0) {
-        container.innerHTML = "<p style='text-align:center; padding: 20px; color: #888; font-size: 0.85rem;'>Nenhum produto cadastrado ainda.</p>";
-        return;
+// Prévia de imagem local
+window.previewImagem = function(input, previewId) {
+    const preview = document.getElementById(previewId);
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
     }
+};
 
-    listaProdutosGlobal.forEach(prod => {
-        const img = prod.imagem || 'https://via.placeholder.com/60';
-        const precoFormatado = parseFloat(prod.preco || 0).toFixed(2).replace('.', ',');
-        const tamanhosTxt = Array.isArray(prod.tamanhos) ? prod.tamanhos.join(', ') : (prod.tamanhos || 'N/A');
+// --- SALVAR / EDITAR PRODUTO ---
+formProduto.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    btnSalvar.disabled = true;
+    btnSalvar.textContent = "Salvando...";
 
-        const div = document.createElement("div");
-        div.className = "item-admin-produto";
-        div.innerHTML = `
-            <img src="${img}" alt="${prod.nome}">
-            <div class="item-info">
-                <div class="item-nome">${prod.nome}</div>
-                <div class="item-detalhes">Cat: <strong>${prod.categoria || 'Geral'}</strong> | Tam: <strong>${tamanhosTxt}</strong></div>
-                <div class="item-preco">R$ ${precoFormatado}</div>
-            </div>
-            <div class="item-acoes">
-                <button class="btn-acao btn-editar" onclick="prepararEdicao('${prod.id}')">✏️ Editar</button>
-                <button class="btn-acao btn-excluir" onclick="excluirProduto('${prod.id}', '${prod.nome}')">🗑️ Excluir</button>
-            </div>
-        `;
-        container.appendChild(div);
-    });
-}
+    const checkboxesTamanhos = document.querySelectorAll('input[name="tamanhos"]:checked');
+    const tamanhosSelecionados = Array.from(checkboxesTamanhos).map(cb => cb.value);
 
-function salvarProduto(e) {
-    if (e) e.preventDefault();
+    const img1 = await obterUrlImagem('fileImagem1', 'imagem1');
+    const img2 = await obterUrlImagem('fileImagem2', 'imagem2');
+    const img3 = await obterUrlImagem('fileImagem3', 'imagem3');
 
-    const id = document.getElementById("produtoId").value;
-    const nome = document.getElementById("nome").value.trim();
-    const descricao = document.getElementById("descricao") ? document.getElementById("descricao").value.trim() : '';
-    const preco = parseFloat(document.getElementById("preco").value);
-    const categoria = document.getElementById("categoria").value;
-    const tamanhosInput = document.getElementById("tamanhos").value.trim();
-    const imagem = document.getElementById("imagem").value.trim();
-
-    const tamanhosArr = tamanhosInput.split(',').map(t => t.trim()).filter(t => t !== '');
-
+    const id = produtoIdInput.value;
     const dadosProduto = {
-        nome: nome,
-        descricao: descricao,
-        preco: preco,
-        categoria: categoria,
-        tamanhos: tamanhosArr,
-        imagem: imagem
+        nome: nomeInput.value,
+        preco: parseFloat(precoInput.value),
+        categoria: categoriaSelect.value,
+        tamanhos: tamanhosSelecionados.length > 0 ? tamanhosSelecionados : ['Único'],
+        descricao: descricaoInput.value,
+        imagem1: img1,
+        imagem2: img2,
+        imagem3: img3
     };
 
     if (id) {
-        db.ref("produtos/" + id).update(dadosProduto)
-            .then(() => {
-                mostrarAviso("✅ Produto atualizado com sucesso!");
-                resetarFormulario();
-            });
+        db.ref('produtos/' + id).update(dadosProduto)
+            .then(() => mostrarAviso("Produto atualizado com sucesso!"))
+            .finally(() => resetarFormulario());
     } else {
-        db.ref("produtos").push(dadosProduto)
-            .then(() => {
-                mostrarAviso("✅ Novo produto cadastrado!");
-                resetarFormulario();
-            });
+        db.ref('produtos').push(dadosProduto)
+            .then(() => mostrarAviso("Produto cadastrado com sucesso!"))
+            .finally(() => resetarFormulario());
     }
+});
+
+// --- CARREGAR E EXIBIR PRODUTOS ---
+function carregarProdutos() {
+    db.ref('produtos').on('value', snapshot => {
+        listaProdutos.innerHTML = '';
+        let total = 0;
+
+        snapshot.forEach(childSnapshot => {
+            total++;
+            const prod = childSnapshot.val();
+            const key = childSnapshot.key;
+
+            let tamanhosTexto = 'Único';
+            if (Array.isArray(prod.tamanhos)) {
+                tamanhosTexto = prod.tamanhos.join(', ');
+            } else if (typeof prod.tamanhos === 'string') {
+                tamanhosTexto = prod.tamanhos;
+            }
+
+            const fotoCapa = prod.imagem1 || prod.imagem || 'https://via.placeholder.com/60';
+
+            const card = document.createElement('div');
+            card.className = 'item-admin-produto';
+            card.innerHTML = `
+                <img src="${fotoCapa}" alt="${prod.nome}">
+                <div class="item-info">
+                    <div class="item-nome">${prod.nome}</div>
+                    <div class="item-detalhes">${(prod.categoria || '').toUpperCase()} | Tamanhos: <strong>${tamanhosTexto}</strong></div>
+                    <div class="item-preco">R$ ${parseFloat(prod.preco || 0).toFixed(2)}</div>
+                </div>
+                <div class="item-acoes">
+                    <button class="btn-acao btn-editar" onclick="prepararEdicao('${key}')">Editar</button>
+                    <button class="btn-acao btn-excluir" onclick="excluirProduto('${key}')">Excluir</button>
+                </div>
+            `;
+            listaProdutos.appendChild(card);
+        });
+
+        totalProdutos.textContent = total;
+    });
 }
 
-function prepararEdicao(id) {
-    const prod = listaProdutosGlobal.find(p => p.id === id);
-    if (!prod) return;
+// --- PREPARAR EDIÇÃO ---
+window.prepararEdicao = function(id) {
+    db.ref('produtos/' + id).once('value').then(snapshot => {
+        const prod = snapshot.val();
+        if (!prod) return;
 
-    document.getElementById("produtoId").value = prod.id;
-    document.getElementById("nome").value = prod.nome || '';
-    if (document.getElementById("descricao")) {
-        document.getElementById("descricao").value = prod.descricao || '';
+        produtoIdInput.value = id;
+        nomeInput.value = prod.nome || '';
+        precoInput.value = prod.preco || '';
+        categoriaSelect.value = prod.categoria || '';
+        descricaoInput.value = prod.descricao || '';
+
+        const tamanhosSalvos = Array.isArray(prod.tamanhos) 
+            ? prod.tamanhos 
+            : (prod.tamanhos ? prod.tamanhos.split(',').map(s => s.trim()) : []);
+
+        document.querySelectorAll('input[name="tamanhos"]').forEach(cb => {
+            cb.checked = tamanhosSalvos.includes(cb.value);
+        });
+
+        document.getElementById('imagem1').value = prod.imagem1 || prod.imagem || '';
+        document.getElementById('imagem2').value = prod.imagem2 || '';
+        document.getElementById('imagem3').value = prod.imagem3 || '';
+
+        if (prod.imagem1 || prod.imagem) {
+            document.getElementById('preview1').src = prod.imagem1 || prod.imagem;
+            document.getElementById('preview1').style.display = 'block';
+        }
+        if (prod.imagem2) {
+            document.getElementById('preview2').src = prod.imagem2;
+            document.getElementById('preview2').style.display = 'block';
+        }
+        if (prod.imagem3) {
+            document.getElementById('preview3').src = prod.imagem3;
+            document.getElementById('preview3').style.display = 'block';
+        }
+
+        tituloForm.textContent = "Editar Produto";
+        btnCancelar.style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+};
+
+// --- EXCLUIR PRODUTO ---
+window.excluirProduto = function(id) {
+    if (confirm("Tem certeza que deseja excluir este produto?")) {
+        db.ref('produtos/' + id).remove()
+            .then(() => mostrarAviso("Produto excluído com sucesso!"));
     }
-    document.getElementById("preco").value = prod.preco || '';
-    document.getElementById("categoria").value = prod.categoria || 'Calcinhas';
-    
-    const tamanhosTxt = Array.isArray(prod.tamanhos) ? prod.tamanhos.join(', ') : (prod.tamanhos || 'P, M, G, GG');
-    document.getElementById("tamanhos").value = tamanhosTxt;
-    document.getElementById("imagem").value = prod.imagem || '';
+};
 
-    const titulo = document.getElementById("tituloForm");
-    if (titulo) titulo.textContent = "✏️ Editar Produto";
-
-    const btnSubmit = document.getElementById("btnSubmit");
-    if (btnSubmit) btnSubmit.textContent = "💾 Salvar Alterações";
-
-    const btnCancelar = document.getElementById("btnCancelar");
-    if (btnCancelar) btnCancelar.style.display = "block";
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+btnCancelar.addEventListener('click', resetarFormulario);
 
 function resetarFormulario() {
-    const form = document.getElementById("formProduto");
-    if (form) form.reset();
+    produtoIdInput.value = '';
+    formProduto.reset();
+    
+    document.querySelectorAll('input[name="tamanhos"]').forEach(cb => cb.checked = false);
 
-    document.getElementById("produtoId").value = "";
-    document.getElementById("tamanhos").value = "P, M, G, GG";
+    ['preview1', 'preview2', 'preview3'].forEach(id => {
+        const p = document.getElementById(id);
+        if (p) {
+            p.src = '';
+            p.style.display = 'none';
+        }
+    });
 
-    const titulo = document.getElementById("tituloForm");
-    if (titulo) titulo.textContent = "➕ Cadastrar Novo Produto";
-
-    const btnSubmit = document.getElementById("btnSubmit");
-    if (btnSubmit) btnSubmit.textContent = "💾 Salvar Produto";
-
-    const btnCancelar = document.getElementById("btnCancelar");
-    if (btnCancelar) btnCancelar.style.display = "none";
-
-    const status = document.getElementById("statusFoto");
-    if (status) status.style.display = "none";
-}
-
-function excluirProduto(id, nome) {
-    if (confirm(`Tem certeza que deseja excluir o produto "${nome}"?`)) {
-        db.ref("produtos/" + id).remove()
-            .then(() => {
-                mostrarAviso("🗑️ Produto excluído com sucesso!");
-            });
-    }
+    tituloForm.textContent = "Cadastrar Novo Produto";
+    btnCancelar.style.display = 'none';
+    btnSalvar.disabled = false;
+    btnSalvar.textContent = "Salvar Produto";
 }
 
 function mostrarAviso(msg) {
-    const box = document.getElementById("boxAviso");
-    if (!box) return;
-
-    box.textContent = msg;
-    box.className = "aviso sucesso";
-    box.style.display = "block";
-
+    aviso.textContent = msg;
+    aviso.className = "aviso sucesso";
+    aviso.style.display = "block";
     setTimeout(() => {
-        box.style.display = "none";
+        aviso.style.display = "none";
     }, 3000);
-}
-
-// ==========================================
-// ENVIO DE PEDIDO VIA WHATSAPP (AUXILIAR)
-// ==========================================
-function enviarPedidoWhatsapp(carrinho = [], dadosCliente = {}) {
-    if (!carrinho || carrinho.length === 0) {
-        alert("Seu carrinho está vazio!");
-        return;
-    }
-
-    let mensagem = "🛍️ *NOVO PEDIDO - DABRUALE MODA ÍNTIMA*\n\n";
-
-    if (dadosCliente.nome) mensagem += `👤 *Cliente:* ${dadosCliente.nome}\n`;
-    if (dadosCliente.telefone) mensagem += `📞 *Telefone:* ${dadosCliente.telefone}\n`;
-    if (dadosCliente.endereco) mensagem += `📍 *Endereço:* ${dadosCliente.endereco}\n`;
-    if (dadosCliente.pagamento) mensagem += `💳 *Pagamento:* ${dadosCliente.pagamento}\n`;
-    if (dadosCliente.obs) mensagem += `📝 *Observações:* ${dadosCliente.obs}\n`;
-
-    mensagem += "\n📦 *ITENS DO PEDIDO:*\n";
-
-    let total = 0;
-    carrinho.forEach((item, index) => {
-        const subtotal = (item.preco || 0) * (item.quantidade || 1);
-        total += subtotal;
-        const precoUnit = parseFloat(item.preco || 0).toFixed(2).replace('.', ',');
-        const subtotalTxt = parseFloat(subtotal).toFixed(2).replace('.', ',');
-
-        mensagem += `${index + 1}. *${item.nome}*\n`;
-        if (item.tamanho) mensagem += `   • Tamanho: ${item.tamanho}\n`;
-        mensagem += `   • Qtd: ${item.quantidade || 1} x R$ ${precoUnit} = R$ ${subtotalTxt}\n`;
-    });
-
-    const totalTxt = parseFloat(total).toFixed(2).replace('.', ',');
-    mensagem += `\n💰 *TOTAL DO PEDIDO:* R$ ${totalTxt}`;
-
-    const url = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
-    window.open(url, "_blank");
 }
