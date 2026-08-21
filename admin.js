@@ -194,7 +194,7 @@ if (formProduto) {
                 return;
             }
 
-            // Captura os tamanhos selecionados
+            // Captura os tamanhos selecionados nos checkboxes
             const checkboxesTamanhos = document.querySelectorAll('input[name="tamanhos"]:checked');
             const tamanhosSelecionados = Array.from(checkboxesTamanhos).map(cb => cb.value);
 
@@ -246,7 +246,14 @@ function carregarProdutos() {
             produtosCache[id] = p;
 
             const fotoCapa = p.imagem || p.imagem1 || 'https://via.placeholder.com/60';
-            const listaTamanhos = p.tamanhos && Array.isArray(p.tamanhos) ? p.tamanhos.join(', ') : 'Único';
+            
+            // Tratamento flexível de tamanhos (suporta Arrays e cadastros antigos em Texto)
+            let listaTamanhos = 'Único';
+            if (Array.isArray(p.tamanhos) && p.tamanhos.length > 0) {
+                listaTamanhos = p.tamanhos.join(', ');
+            } else if (typeof p.tamanhos === 'string' && p.tamanhos.trim() !== '') {
+                listaTamanhos = p.tamanhos;
+            }
 
             const card = document.createElement('div');
             card.className = 'item-admin-produto';
@@ -254,7 +261,7 @@ function carregarProdutos() {
                 <img src="${fotoCapa}" alt="${p.nome}">
                 <div class="item-info">
                     <div class="item-nome">${p.nome}</div>
-                    <div class="item-detalhes">${p.categoria ? p.categoria.toUpperCase() : ''} | Tamanhos: ${listaTamanhos}</div>
+                    <div class="item-detalhes">${p.categoria ? p.categoria.toUpperCase() : ''} | Tamanhos: <strong>${listaTamanhos}</strong></div>
                     <div class="item-preco">R$ ${parseFloat(p.preco).toFixed(2)}</div>
                 </div>
                 <div class="item-acoes">
@@ -269,11 +276,6 @@ function carregarProdutos() {
     });
 }
 
-function escapeHtml(text) {
-    if (!text) return '';
-    return text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-}
-
 // EDITAR PRODUTO
 window.editarProduto = function (id) {
     const p = produtosCache[id];
@@ -284,14 +286,22 @@ window.editarProduto = function (id) {
     precoInput.value = p.preco || '';
     categoriaInput.value = p.categoria || '';
 
-    // Marcar as caixas de tamanho
+    // Limpar todas as caixas de seleção primeiro
     document.querySelectorAll('input[name="tamanhos"]').forEach(cb => cb.checked = false);
-    if (p.tamanhos && Array.isArray(p.tamanhos)) {
-        p.tamanhos.forEach(tam => {
-            const cb = document.querySelector(`input[name="tamanhos"][value="${tam}"]`);
-            if (cb) cb.checked = true;
-        });
+
+    // Normalizar a leitura dos tamanhos salvos
+    let tamanhosParaMarcar = [];
+    if (Array.isArray(p.tamanhos)) {
+        tamanhosParaMarcar = p.tamanhos;
+    } else if (typeof p.tamanhos === 'string') {
+        tamanhosParaMarcar = p.tamanhos.split(',').map(s => s.trim());
     }
+
+    // Marcar no formulário os tamanhos encontrados
+    tamanhosParaMarcar.forEach(tam => {
+        const cb = document.querySelector(`input[name="tamanhos"][value="${tam}"]`);
+        if (cb) cb.checked = true;
+    });
 
     document.getElementById('imagem1').value = p.imagem1 || p.imagem || '';
     document.getElementById('imagem2').value = p.imagem2 || '';
