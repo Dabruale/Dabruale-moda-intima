@@ -179,6 +179,7 @@
             object-fit: cover;
             border-radius: 8px;
             cursor: pointer;
+            background-color: #f8bbd0;
         }
 
         .miniaturas-container {
@@ -186,6 +187,7 @@
             gap: 4px;
             max-width: 85px;
             justify-content: center;
+            flex-wrap: wrap;
         }
 
         .thumb-img {
@@ -196,6 +198,7 @@
             border: 1px solid #ddd;
             cursor: pointer;
             opacity: 0.6;
+            background-color: #f8bbd0;
         }
 
         .thumb-img.ativa {
@@ -325,6 +328,19 @@
             color: #d81b60;
         }
 
+        .btn-limpar-tudo {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: auto;
+            margin-right: 10px;
+        }
+
         .btn-fechar {
             background: none;
             border: none;
@@ -339,10 +355,11 @@
             flex-direction: column;
             gap: 8px;
             margin-bottom: 12px;
-            max-height: 200px;
+            max-height: 220px;
             overflow-y: auto;
             border-bottom: 1px dashed #e0e0e0;
             padding-bottom: 10px;
+            min-height: 50px;
         }
 
         .item-carrinho {
@@ -373,7 +390,7 @@
             color: #d32f2f;
             cursor: pointer;
             font-weight: bold;
-            font-size: 1rem;
+            font-size: 1.1rem;
             padding: 4px 8px;
         }
 
@@ -502,6 +519,9 @@
                 <button class="btn-categoria" onclick="selecionarCategoria('Camisolas', this)">Camisolas</button>
                 <button class="btn-categoria" onclick="selecionarCategoria('Pijamas', this)">Pijamas</button>
                 <button class="btn-categoria" onclick="selecionarCategoria('Cuecas', this)">Cuecas</button>
+                <button class="btn-categoria" onclick="selecionarCategoria('Fitness', this)">Fitness</button>
+                <button class="btn-categoria" onclick="selecionarCategoria('Biquínis', this)">Biquínis</button>
+                <button class="btn-categoria" onclick="selecionarCategoria('Meias', this)">Meias</button>
             </div>
 
             <div class="aviso-tamanho-topo" id="boxAvisoTamanho">
@@ -523,10 +543,10 @@
         <div class="modal-carrinho">
             <div class="modal-header">
                 <h2>🛒 Seu Carrinho</h2>
+                <button class="btn-limpar-tudo" onclick="esvaziarCarrinho()">🗑️ Esvaziar</button>
                 <button class="btn-fechar" onclick="fecharCarrinho()">✕</button>
             </div>
 
-            <!-- CONTAINER ONDE OS PRODUTOS APARECEM -->
             <div class="itens-carrinho" id="itensCarrinho"></div>
 
             <div class="dados-cliente">
@@ -621,11 +641,15 @@
 
         let todosProdutos = [];
         let carrinho = [];
-        
-        // Leitura segura do localStorage
+
         try {
-            carrinho = JSON.parse(localStorage.getItem('carrinhoDabruale')) || [];
-            if (!Array.isArray(carrinho)) carrinho = [];
+            const raw = localStorage.getItem('carrinhoDabruale');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                    carrinho = parsed.filter(i => i && typeof i === 'object' && i.nome);
+                }
+            }
         } catch (e) {
             carrinho = [];
         }
@@ -633,6 +657,7 @@
         let categoriaAtual = 'Todos';
         let timerAviso = null;
         const NUMERO_WHATSAPP = "5565996719068";
+        const IMG_PADRAO = "https://via.placeholder.com/150/d81b60/ffffff?text=Dabruale";
 
         document.addEventListener("DOMContentLoaded", () => {
             atualizarContadorCarrinho();
@@ -648,6 +673,26 @@
                 renderizarProdutos();
             });
         });
+
+        function obterListaImagens(prod) {
+            let lista = [];
+
+            if (Array.isArray(prod.imagens)) {
+                lista = prod.imagens.filter(url => url && typeof url === 'string' && url.trim() !== '');
+            } else if (prod.imagens && typeof prod.imagens === 'object') {
+                lista = Object.values(prod.imagens).filter(url => url && typeof url === 'string' && url.trim() !== '');
+            }
+
+            const camposPossiveis = ['imagem', 'imagem1', 'imagem2', 'imagem3', 'imagem4', 'imagem5', 'foto', 'foto1', 'foto2', 'foto3', 'url', 'url1', 'url2', 'url3'];
+            camposPossiveis.forEach(key => {
+                if (prod[key] && typeof prod[key] === 'string' && prod[key].trim() !== '' && !lista.includes(prod[key])) {
+                    lista.push(prod[key]);
+                }
+            });
+
+            if (lista.length === 0) lista.push(IMG_PADRAO);
+            return lista;
+        }
 
         function selecionarCategoria(cat, elemento) {
             categoriaAtual = cat;
@@ -704,29 +749,25 @@
             const termoBusca = document.getElementById("inputBusca").value.toLowerCase();
             grid.innerHTML = "";
 
+            // Filtra e remove produtos fantasma/corrompidos sem nome
             const filtrados = todosProdutos.filter(prod => {
-                const combinaCat = categoriaAtual === 'Todos' || (prod.categoria && prod.categoria.toLowerCase().includes(categoriaAtual.toLowerCase()));
+                if (!prod || !prod.nome || typeof prod.nome !== 'string' || prod.nome.trim() === '') return false;
+
+                const catProd = (prod.categoria || "").toLowerCase();
+                const catFiltro = categoriaAtual.toLowerCase();
+                const combinaCat = categoriaAtual === 'Todos' || catProd.includes(catFiltro);
                 const combinaBusca = (prod.nome || "").toLowerCase().includes(termoBusca);
+
                 return combinaCat && combinaBusca;
             });
 
             if (filtrados.length === 0) {
-                grid.innerHTML = "<p style='text-align:center; padding:20px; color:#888; font-size:0.85rem;'>Nenhum produto encontrado.</p>";
+                grid.innerHTML = "<p style='text-align:center; padding:20px; color:#888; font-size:0.85rem;'>Nenhum produto encontrado nesta categoria.</p>";
                 return;
             }
 
             filtrados.forEach(prod => {
-                let listaImagens = [];
-                if (Array.isArray(prod.imagens) && prod.imagens.length > 0) {
-                    listaImagens = prod.imagens;
-                } else {
-                    if (prod.imagem) listaImagens.push(prod.imagem);
-                    if (prod.imagem2) listaImagens.push(prod.imagem2);
-                    if (prod.imagem3) listaImagens.push(prod.imagem3);
-                }
-
-                if (listaImagens.length === 0) listaImagens.push('https://via.placeholder.com/85');
-
+                const listaImagens = obterListaImagens(prod);
                 const imgPrincipal = listaImagens[0];
                 const precoNum = parseFloat(String(prod.preco || 0).replace(',', '.')) || 0;
                 const precoFormatado = precoNum.toFixed(2).replace('.', ',');
@@ -735,7 +776,9 @@
                 if (listaImagens.length > 1) {
                     htmlMiniaturas = `<div class="miniaturas-container">` + 
                         listaImagens.map((url, idx) => `
-                            <img src="${url}" class="thumb-img ${idx === 0 ? 'ativa' : ''}" onclick="trocarFoto('${prod.id}', '${url}', this)">
+                            <img src="${url}" class="thumb-img ${idx === 0 ? 'ativa' : ''}" 
+                                 onclick="trocarFoto('${prod.id}', '${url}', this)"
+                                 onerror="this.onerror=null; this.src='${IMG_PADRAO}';">
                         `).join('') + `</div>`;
                 }
 
@@ -751,7 +794,9 @@
                 card.className = "card-produto";
                 card.innerHTML = `
                     <div class="foto-box">
-                        <img id="img-main-${prod.id}" class="img-principal" src="${imgPrincipal}" alt="${prod.nome}" onclick="abrirFotoAmpliada(this.src)">
+                        <img id="img-main-${prod.id}" class="img-principal" src="${imgPrincipal}" alt="${prod.nome}" 
+                             onclick="abrirFotoAmpliada(this.src)"
+                             onerror="this.onerror=null; this.src='${IMG_PADRAO}';">
                         ${htmlMiniaturas}
                     </div>
                     <div class="detalhes-produto">
@@ -801,7 +846,7 @@
             } else {
                 carrinho.push({
                     id: produto.id,
-                    nome: produto.nome,
+                    nome: produto.nome || "Produto",
                     preco: precoNum,
                     tamanho: tamanhoSelecionado,
                     quantidade: quantidade
@@ -831,6 +876,13 @@
             document.getElementById('modalCarrinho').style.display = 'none';
         }
 
+        function esvaziarCarrinho() {
+            carrinho = [];
+            salvarCarrinho();
+            atualizarContadorCarrinho();
+            renderizarItensCarrinho();
+        }
+
         function removerDoCarrinho(index) {
             carrinho.splice(index, 1);
             salvarCarrinho();
@@ -838,7 +890,6 @@
             renderizarItensCarrinho();
         }
 
-        /* FUNÇÃO PRINCIPAL DE EXIBIÇÃO DOS PRODUTOS NO CARRINHO */
         function renderizarItensCarrinho() {
             const container = document.getElementById('itensCarrinho');
             const totalEl = document.getElementById('valorTotalCarrinho');
@@ -846,39 +897,33 @@
             if (!container) return;
 
             if (!Array.isArray(carrinho) || carrinho.length === 0) {
-                container.innerHTML = "<p style='text-align:center; color:#888; padding:10px; font-size:0.8rem;'>Seu carrinho está vazio.</p>";
+                container.innerHTML = "<p style='text-align:center; color:#888; padding:12px; font-size:0.8rem;'>Seu carrinho está vazio.</p>";
                 if (totalEl) totalEl.textContent = "R$ 0,00";
                 return;
             }
 
-            container.innerHTML = "";
+            let htmlContent = "";
             let total = 0;
 
             carrinho.forEach((item, index) => {
-                let precoNum = 0;
-                if (typeof item.preco === 'number') {
-                    precoNum = item.preco;
-                } else {
-                    precoNum = parseFloat(String(item.preco || 0).replace(',', '.')) || 0;
-                }
-
+                let precoNum = typeof item.preco === 'number' ? item.preco : (parseFloat(String(item.preco || 0).replace(',', '.')) || 0);
                 const qtdNum = parseInt(item.quantidade) || 1;
                 const subtotal = precoNum * qtdNum;
                 total += subtotal;
 
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'item-carrinho';
-                itemDiv.innerHTML = `
-                    <div>
-                        <strong>${item.nome || 'Produto'}</strong><br>
-                        <span class="badge-tamanho">Tamanho: ${item.tamanho || 'N/A'}</span><br>
-                        <span style="font-size:0.72rem; color:#666;">Qtd: ${qtdNum} x R$ ${precoNum.toFixed(2).replace('.', ',')}</span>
+                htmlContent += `
+                    <div class="item-carrinho">
+                        <div>
+                            <strong>${item.nome || 'Produto'}</strong><br>
+                            <span class="badge-tamanho">Tamanho: ${item.tamanho || 'N/A'}</span><br>
+                            <span style="font-size:0.72rem; color:#666;">Qtd: ${qtdNum} x R$ ${precoNum.toFixed(2).replace('.', ',')}</span>
+                        </div>
+                        <button class="btn-remover" title="Remover item" onclick="removerDoCarrinho(${index})">✕</button>
                     </div>
-                    <button class="btn-remover" title="Remover item" onclick="removerDoCarrinho(${index})">✕</button>
                 `;
-                container.appendChild(itemDiv);
             });
 
+            container.innerHTML = htmlContent;
             if (totalEl) totalEl.textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
         }
 
