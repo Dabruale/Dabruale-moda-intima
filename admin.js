@@ -24,7 +24,7 @@ if (!firebase.apps.length) {
 const auth = firebase.auth();
 const database = firebase.database();
 
-// Guarda os dados dos produtos em memória para facilitar a edição
+// Cache local de produtos para edição rápida
 let produtosCache = {};
 
 // ELEMENTOS DA TELA
@@ -60,7 +60,7 @@ window.previewImagem = function (input, previewId) {
     }
 };
 
-// --- FUNÇÃO PARA COMPRIMIR IMAGEM ANTES DO UPLOAD (DEIXA SUPER RÁPIDO) ---
+// --- COMPRESSÃO DE IMAGEM ANTES DO UPLOAD ---
 function comprimirImagem(file, maxWidth = 1000, maxQuality = 0.75) {
     return new Promise((resolve) => {
         if (!file.type.match(/image.*/)) {
@@ -101,12 +101,11 @@ function comprimirImagem(file, maxWidth = 1000, maxQuality = 0.75) {
     });
 }
 
-// --- FUNÇÃO PARA ENVIAR PARA O CLOUDINARY ---
+// --- UPLOAD PARA CLOUDINARY ---
 async function processarImagem(fileInput, urlInput) {
     if (fileInput && fileInput.files && fileInput.files[0]) {
         const arquivoOriginal = fileInput.files[0];
         
-        // Comprime a imagem antes de enviar
         const arquivoComprimido = await comprimirImagem(arquivoOriginal);
 
         const formData = new FormData();
@@ -195,7 +194,7 @@ if (formProduto) {
                 return;
             }
 
-            // Capturar os tamanhos marcados
+            // Captura os tamanhos selecionados
             const checkboxesTamanhos = document.querySelectorAll('input[name="tamanhos"]:checked');
             const tamanhosSelecionados = Array.from(checkboxesTamanhos).map(cb => cb.value);
 
@@ -237,14 +236,14 @@ function carregarProdutos() {
     database.ref('produtos').on('value', (snapshot) => {
         listaProdutos.innerHTML = '';
         totalProdutos.innerText = '0';
-        produtosCache = {}; // Limpa cache
+        produtosCache = {};
         let total = 0;
 
         snapshot.forEach((childSnapshot) => {
             total++;
             const id = childSnapshot.key;
             const p = childSnapshot.val();
-            produtosCache[id] = p; // Guarda no cache local
+            produtosCache[id] = p;
 
             const fotoCapa = p.imagem || p.imagem1 || 'https://via.placeholder.com/60';
             const listaTamanhos = p.tamanhos && Array.isArray(p.tamanhos) ? p.tamanhos.join(', ') : 'Único';
@@ -285,7 +284,7 @@ window.editarProduto = function (id) {
     precoInput.value = p.preco || '';
     categoriaInput.value = p.categoria || '';
 
-    // Marcadores de tamanho
+    // Marcar as caixas de tamanho
     document.querySelectorAll('input[name="tamanhos"]').forEach(cb => cb.checked = false);
     if (p.tamanhos && Array.isArray(p.tamanhos)) {
         p.tamanhos.forEach(tam => {
@@ -336,7 +335,6 @@ function limparFormulario() {
     formProduto.reset();
     produtoId.value = '';
     
-    // Desmarca todos os tamanhos
     document.querySelectorAll('input[name="tamanhos"]').forEach(cb => cb.checked = false);
 
     document.getElementById('preview1').style.display = 'none';
