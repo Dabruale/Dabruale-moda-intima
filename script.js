@@ -50,7 +50,7 @@ const aviso = document.getElementById('aviso');
 // PREVIEW DAS IMAGENS NA TELA
 window.previewImagem = function (input, previewId) {
     const preview = document.getElementById(previewId);
-    if (input.files && input.files[0]) {
+    if (preview && input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = function (e) {
             preview.src = e.target.result;
@@ -90,6 +90,10 @@ function comprimirImagem(file, maxWidth = 1000, maxQuality = 0.75) {
                 ctx.drawImage(img, 0, 0, width, height);
 
                 canvas.toBlob((blob) => {
+                    if (!blob) {
+                        resolve(file);
+                        return;
+                    }
                     const arquivoComprimido = new File([blob], file.name, {
                         type: 'image/jpeg',
                         lastModified: Date.now()
@@ -97,7 +101,9 @@ function comprimirImagem(file, maxWidth = 1000, maxQuality = 0.75) {
                     resolve(arquivoComprimido);
                 }, 'image/jpeg', maxQuality);
             };
+            img.onerror = () => resolve(file);
         };
+        reader.onerror = () => resolve(file);
     });
 }
 
@@ -105,7 +111,6 @@ function comprimirImagem(file, maxWidth = 1000, maxQuality = 0.75) {
 async function processarImagem(fileInput, urlInput) {
     if (fileInput && fileInput.files && fileInput.files[0]) {
         const arquivoOriginal = fileInput.files[0];
-        
         const arquivoComprimido = await comprimirImagem(arquivoOriginal);
 
         const formData = new FormData();
@@ -123,10 +128,10 @@ async function processarImagem(fileInput, urlInput) {
             if (data.secure_url) {
                 return data.secure_url;
             } else {
-                throw new Error(data.error ? data.error.message : "Erro ao responder do Cloudinary.");
+                throw new Error(data.error ? data.error.message : "Erro ao enviar imagem ao Cloudinary.");
             }
         } catch (err) {
-            throw new Error("Erro no upload: " + err.message);
+            throw new Error("Falha no upload da imagem: " + err.message);
         }
     }
     return urlInput ? urlInput.value.trim() : "";
@@ -139,12 +144,16 @@ if (formLogin) {
         const email = document.getElementById('email').value.trim();
         const senha = document.getElementById('senha').value.trim();
 
-        erroLogin.style.display = 'none';
+        if (erroLogin) erroLogin.style.display = 'none';
 
         auth.signInWithEmailAndPassword(email, senha)
             .catch((error) => {
-                erroLogin.style.display = 'block';
-                erroLogin.innerText = "Erro ao entrar: " + error.message;
+                if (erroLogin) {
+                    erroLogin.style.display = 'block';
+                    erroLogin.innerText = "Erro ao entrar: " + error.message;
+                } else {
+                    alert("Erro ao entrar: " + error.message);
+                }
             });
     });
 }
@@ -152,12 +161,12 @@ if (formLogin) {
 // MONITOR DE AUTENTICAÇÃO
 auth.onAuthStateChanged((user) => {
     if (user) {
-        loginContainer.style.display = 'none';
-        adminPanel.style.display = 'flex';
+        if (loginContainer) loginContainer.style.display = 'none';
+        if (adminPanel) adminPanel.style.display = 'flex';
         carregarProdutos();
     } else {
-        loginContainer.style.display = 'flex';
-        adminPanel.style.display = 'none';
+        if (loginContainer) loginContainer.style.display = 'flex';
+        if (adminPanel) adminPanel.style.display = 'none';
     }
 });
 
@@ -171,8 +180,10 @@ if (formProduto) {
     formProduto.addEventListener('submit', async function (e) {
         e.preventDefault();
 
-        btnSalvar.disabled = true;
-        btnSalvar.innerText = "Otimizando e enviando fotos...";
+        if (btnSalvar) {
+            btnSalvar.disabled = true;
+            btnSalvar.innerText = "Otimizando e enviando fotos...";
+        }
 
         try {
             const file1 = document.getElementById('fileImagem1');
@@ -189,8 +200,10 @@ if (formProduto) {
 
             if (!img1) {
                 alert("A Foto 1 (Principal) é obrigatória!");
-                btnSalvar.disabled = false;
-                btnSalvar.innerText = "Salvar Produto";
+                if (btnSalvar) {
+                    btnSalvar.disabled = false;
+                    btnSalvar.innerText = "Salvar Produto";
+                }
                 return;
             }
 
@@ -199,18 +212,18 @@ if (formProduto) {
             const tamanhosSelecionados = Array.from(checkboxesTamanhos).map(cb => cb.value);
 
             const dadosProduto = {
-                nome: nomeInput.value.trim(),
-                preco: parseFloat(precoInput.value),
-                categoria: categoriaInput.value,
+                nome: nomeInput ? nomeInput.value.trim() : "",
+                preco: precoInput ? parseFloat(precoInput.value) : 0,
+                categoria: categoriaInput ? categoriaInput.value : "",
                 tamanhos: tamanhosSelecionados.length > 0 ? tamanhosSelecionados : ["Tamanho Único"],
                 imagem: img1,
                 imagem1: img1,
                 imagem2: img2 || "",
                 imagem3: img3 || "",
-                descricao: descricaoInput.value.trim()
+                descricao: descricaoInput ? descricaoInput.value.trim() : ""
             };
 
-            const id = produtoId.value;
+            const id = produtoId ? produtoId.value : "";
 
             if (id) {
                 await database.ref('produtos/' + id).update(dadosProduto);
@@ -225,17 +238,21 @@ if (formProduto) {
             console.error("Erro completo:", err);
             alert("ERRO AO SALVAR:\n" + err.message);
         } finally {
-            btnSalvar.disabled = false;
-            btnSalvar.innerText = "Salvar Produto";
+            if (btnSalvar) {
+                btnSalvar.disabled = false;
+                btnSalvar.innerText = "Salvar Produto";
+            }
         }
     });
 }
 
 // CARREGAR LISTA DE PRODUTOS
 function carregarProdutos() {
+    if (!listaProdutos) return;
+
     database.ref('produtos').on('value', (snapshot) => {
         listaProdutos.innerHTML = '';
-        totalProdutos.innerText = '0';
+        if (totalProdutos) totalProdutos.innerText = '0';
         produtosCache = {};
         let total = 0;
 
@@ -258,11 +275,11 @@ function carregarProdutos() {
             const card = document.createElement('div');
             card.className = 'item-admin-produto';
             card.innerHTML = `
-                <img src="${fotoCapa}" alt="${p.nome}">
+                <img src="${fotoCapa}" alt="${p.nome || ''}">
                 <div class="item-info">
-                    <div class="item-nome">${p.nome}</div>
+                    <div class="item-nome">${p.nome || 'Sem nome'}</div>
                     <div class="item-detalhes">${p.categoria ? p.categoria.toUpperCase() : ''} | Tamanhos: <strong>${listaTamanhos}</strong></div>
-                    <div class="item-preco">R$ ${parseFloat(p.preco).toFixed(2)}</div>
+                    <div class="item-preco">R$ ${parseFloat(p.preco || 0).toFixed(2)}</div>
                 </div>
                 <div class="item-acoes">
                     <button class="btn-acao btn-editar" onclick="editarProduto('${id}')">Editar</button>
@@ -272,7 +289,7 @@ function carregarProdutos() {
             listaProdutos.appendChild(card);
         });
 
-        totalProdutos.innerText = total;
+        if (totalProdutos) totalProdutos.innerText = total;
     });
 }
 
@@ -281,10 +298,10 @@ window.editarProduto = function (id) {
     const p = produtosCache[id];
     if (!p) return;
 
-    produtoId.value = id;
-    nomeInput.value = p.nome || '';
-    precoInput.value = p.preco || '';
-    categoriaInput.value = p.categoria || '';
+    if (produtoId) produtoId.value = id;
+    if (nomeInput) nomeInput.value = p.nome || '';
+    if (precoInput) precoInput.value = p.preco || '';
+    if (categoriaInput) categoriaInput.value = p.categoria || '';
 
     // Limpar todas as caixas de seleção primeiro
     document.querySelectorAll('input[name="tamanhos"]').forEach(cb => cb.checked = false);
@@ -303,28 +320,42 @@ window.editarProduto = function (id) {
         if (cb) cb.checked = true;
     });
 
-    document.getElementById('imagem1').value = p.imagem1 || p.imagem || '';
-    document.getElementById('imagem2').value = p.imagem2 || '';
-    document.getElementById('imagem3').value = p.imagem3 || '';
+    const img1Val = p.imagem1 || p.imagem || '';
+    const img2Val = p.imagem2 || '';
+    const img3Val = p.imagem3 || '';
+
+    if (document.getElementById('imagem1')) document.getElementById('imagem1').value = img1Val;
+    if (document.getElementById('imagem2')) document.getElementById('imagem2').value = img2Val;
+    if (document.getElementById('imagem3')) document.getElementById('imagem3').value = img3Val;
 
     const p1 = document.getElementById('preview1');
-    if (p.imagem1 || p.imagem) { p1.src = p.imagem1 || p.imagem; p1.style.display = 'block'; } else { p1.style.display = 'none'; }
+    if (p1) {
+        p1.src = img1Val;
+        p1.style.display = img1Val ? 'block' : 'none';
+    }
 
     const p2 = document.getElementById('preview2');
-    if (p.imagem2) { p2.src = p.imagem2; p2.style.display = 'block'; } else { p2.style.display = 'none'; }
+    if (p2) {
+        p2.src = img2Val;
+        p2.style.display = img2Val ? 'block' : 'none';
+    }
 
     const p3 = document.getElementById('preview3');
-    if (p.imagem3) { p3.src = p.imagem3; p3.style.display = 'block'; } else { p3.style.display = 'none'; }
+    if (p3) {
+        p3.src = img3Val;
+        p3.style.display = img3Val ? 'block' : 'none';
+    }
 
-    document.getElementById('fileImagem1').value = '';
-    document.getElementById('fileImagem2').value = '';
-    document.getElementById('fileImagem3').value = '';
+    if (document.getElementById('fileImagem1')) document.getElementById('fileImagem1').value = '';
+    if (document.getElementById('fileImagem2')) document.getElementById('fileImagem2').value = '';
+    if (document.getElementById('fileImagem3')) document.getElementById('fileImagem3').value = '';
 
-    descricaoInput.value = p.descricao || '';
+    if (descricaoInput) descricaoInput.value = p.descricao || '';
 
-    tituloForm.innerText = "Editar Produto";
-    btnSalvar.innerText = "Atualizar Produto";
-    btnCancelar.style.display = "block";
+    if (tituloForm) tituloForm.innerText = "Editar Produto";
+    if (btnSalvar) btnSalvar.innerText = "Atualizar Produto";
+    if (btnCancelar) btnCancelar.style.display = "block";
+    
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
@@ -342,21 +373,26 @@ if (btnCancelar) {
 }
 
 function limparFormulario() {
-    formProduto.reset();
-    produtoId.value = '';
+    if (formProduto) formProduto.reset();
+    if (produtoId) produtoId.value = '';
     
     document.querySelectorAll('input[name="tamanhos"]').forEach(cb => cb.checked = false);
 
-    document.getElementById('preview1').style.display = 'none';
-    document.getElementById('preview2').style.display = 'none';
-    document.getElementById('preview3').style.display = 'none';
+    ['preview1', 'preview2', 'preview3'].forEach(id => {
+        const preview = document.getElementById(id);
+        if (preview) {
+            preview.src = '';
+            preview.style.display = 'none';
+        }
+    });
 
-    tituloForm.innerText = "Cadastrar Novo Produto";
-    btnSalvar.innerText = "Salvar Produto";
-    btnCancelar.style.display = "none";
+    if (tituloForm) tituloForm.innerText = "Cadastrar Novo Produto";
+    if (btnSalvar) btnSalvar.innerText = "Salvar Produto";
+    if (btnCancelar) btnCancelar.style.display = "none";
 }
 
 function mostrarAviso(mensagem) {
+    if (!aviso) return;
     aviso.innerText = mensagem;
     aviso.className = "aviso sucesso";
     aviso.style.display = "block";
