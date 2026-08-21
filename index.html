@@ -42,7 +42,6 @@
             margin: 0 auto;
         }
 
-        /* HEADER EXATAMENTE IGUAL À FOTO 2 */
         header {
             background-color: #d81b60;
             color: white;
@@ -148,7 +147,6 @@
             border: 1px solid #a5d6a7;
         }
 
-        /* LISTA VERTICAL DE PRODUTOS DA FOTO 2 */
         .produtos-grid {
             display: flex;
             flex-direction: column;
@@ -230,7 +228,6 @@
             margin: 2px 0;
         }
 
-        /* ELEMENTOS DA FOTO 2: SELECT DE TAMANHO + QTD - 1 + */
         .controles-produto {
             display: flex;
             align-items: center;
@@ -288,7 +285,7 @@
             margin-top: 4px;
         }
 
-        /* MODAL DO CARRINHO COM FORMULÁRIO DE ENTREGA */
+        /* MODAL DO CARRINHO */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -336,13 +333,16 @@
             color: #888;
         }
 
+        /* LISTA DOS ITENS NO CARRINHO */
         .itens-carrinho {
             display: flex;
             flex-direction: column;
             gap: 8px;
             margin-bottom: 12px;
-            max-height: 180px;
+            max-height: 200px;
             overflow-y: auto;
+            border-bottom: 1px dashed #e0e0e0;
+            padding-bottom: 10px;
         }
 
         .item-carrinho {
@@ -373,6 +373,8 @@
             color: #d32f2f;
             cursor: pointer;
             font-weight: bold;
+            font-size: 1rem;
+            padding: 4px 8px;
         }
 
         .dados-cliente {
@@ -380,8 +382,7 @@
             flex-direction: column;
             gap: 8px;
             margin-bottom: 12px;
-            padding-top: 10px;
-            border-top: 1px dashed #e0e0e0;
+            padding-top: 4px;
         }
 
         .dados-cliente h3 {
@@ -477,7 +478,6 @@
 
     <div class="app-container">
 
-        <!-- topo exatamente como na foto 2 -->
         <header>
             <div>
                 <h1>DABRUALE MODA ÍNTIMA</h1>
@@ -508,9 +508,7 @@
                 <span></span>
             </div>
 
-            <div class="produtos-grid" id="gridProdutos">
-                <!-- Produtos em lista estilo foto 2 -->
-            </div>
+            <div class="produtos-grid" id="gridProdutos"></div>
         </main>
 
         <footer>
@@ -520,7 +518,7 @@
 
     </div>
 
-    <!-- MODAL DO CARRINHO (ITENS + FORMULÁRIO DE ENTREGA) -->
+    <!-- MODAL DO CARRINHO -->
     <div class="modal-overlay" id="modalCarrinho">
         <div class="modal-carrinho">
             <div class="modal-header">
@@ -528,6 +526,7 @@
                 <button class="btn-fechar" onclick="fecharCarrinho()">✕</button>
             </div>
 
+            <!-- CONTAINER ONDE OS PRODUTOS APARECEM -->
             <div class="itens-carrinho" id="itensCarrinho"></div>
 
             <div class="dados-cliente">
@@ -581,8 +580,8 @@
                 </div>
 
                 <div class="campo-grupo">
-                    <label for="clienteObs">Observações</label>
-                    <textarea id="clienteObs" placeholder="Especifique observações ou preferências de cores aqui..."></textarea>
+                    <label for="clienteObs">Observações / Detalhes do Tamanho</label>
+                    <textarea id="clienteObs" placeholder="Especifique tamanhos adicionais, preferências de cores ou detalhes da entrega aqui..."></textarea>
                 </div>
             </div>
 
@@ -595,7 +594,7 @@
         </div>
     </div>
 
-    <!-- MODAL FOTO AMPIADA -->
+    <!-- MODAL FOTO AMPLIADA -->
     <div class="modal-foto-overlay" id="modalFotoAmpliada" onclick="fecharFotoAmpliada()">
         <img class="modal-foto-conteudo" id="imgFotoAmpliada" src="" alt="Ampliada">
     </div>
@@ -621,7 +620,16 @@
         const db = firebase.database();
 
         let todosProdutos = [];
-        let carrinho = JSON.parse(localStorage.getItem('carrinhoDabruale')) || [];
+        let carrinho = [];
+        
+        // Leitura segura do localStorage
+        try {
+            carrinho = JSON.parse(localStorage.getItem('carrinhoDabruale')) || [];
+            if (!Array.isArray(carrinho)) carrinho = [];
+        } catch (e) {
+            carrinho = [];
+        }
+
         let categoriaAtual = 'Todos';
         let timerAviso = null;
         const NUMERO_WHATSAPP = "5565996719068";
@@ -720,7 +728,8 @@
                 if (listaImagens.length === 0) listaImagens.push('https://via.placeholder.com/85');
 
                 const imgPrincipal = listaImagens[0];
-                const precoFormatado = parseFloat(prod.preco || 0).toFixed(2).replace('.', ',');
+                const precoNum = parseFloat(String(prod.preco || 0).replace(',', '.')) || 0;
+                const precoFormatado = precoNum.toFixed(2).replace('.', ',');
 
                 let htmlMiniaturas = '';
                 if (listaImagens.length > 1) {
@@ -783,6 +792,7 @@
 
             const qtdEl = document.getElementById(`qtd-${id}`);
             const quantidade = qtdEl ? parseInt(qtdEl.textContent) || 1 : 1;
+            const precoNum = parseFloat(String(produto.preco || 0).replace(',', '.')) || 0;
 
             const itemExistente = carrinho.find(item => item.id === id && item.tamanho === tamanhoSelecionado);
 
@@ -792,7 +802,7 @@
                 carrinho.push({
                     id: produto.id,
                     nome: produto.nome,
-                    preco: parseFloat(produto.preco || 0),
+                    preco: precoNum,
                     tamanho: tamanhoSelecionado,
                     quantidade: quantidade
                 });
@@ -808,7 +818,7 @@
         }
 
         function atualizarContadorCarrinho() {
-            const totalItens = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
+            const totalItens = carrinho.reduce((acc, item) => acc + (parseInt(item.quantidade) || 0), 0);
             document.getElementById('countCarrinho').textContent = totalItens;
         }
 
@@ -828,13 +838,14 @@
             renderizarItensCarrinho();
         }
 
+        /* FUNÇÃO PRINCIPAL DE EXIBIÇÃO DOS PRODUTOS NO CARRINHO */
         function renderizarItensCarrinho() {
             const container = document.getElementById('itensCarrinho');
             const totalEl = document.getElementById('valorTotalCarrinho');
 
             if (!container) return;
 
-            if (carrinho.length === 0) {
+            if (!Array.isArray(carrinho) || carrinho.length === 0) {
                 container.innerHTML = "<p style='text-align:center; color:#888; padding:10px; font-size:0.8rem;'>Seu carrinho está vazio.</p>";
                 if (totalEl) totalEl.textContent = "R$ 0,00";
                 return;
@@ -844,18 +855,26 @@
             let total = 0;
 
             carrinho.forEach((item, index) => {
-                const subtotal = (item.preco || 0) * (item.quantidade || 1);
+                let precoNum = 0;
+                if (typeof item.preco === 'number') {
+                    precoNum = item.preco;
+                } else {
+                    precoNum = parseFloat(String(item.preco || 0).replace(',', '.')) || 0;
+                }
+
+                const qtdNum = parseInt(item.quantidade) || 1;
+                const subtotal = precoNum * qtdNum;
                 total += subtotal;
 
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'item-carrinho';
                 itemDiv.innerHTML = `
                     <div>
-                        <strong>${item.nome}</strong><br>
-                        <span class="badge-tamanho">Tamanho: ${item.tamanho}</span><br>
-                        <span style="font-size:0.72rem; color:#666;">Qtd: ${item.quantidade} x R$ ${item.preco.toFixed(2).replace('.', ',')}</span>
+                        <strong>${item.nome || 'Produto'}</strong><br>
+                        <span class="badge-tamanho">Tamanho: ${item.tamanho || 'N/A'}</span><br>
+                        <span style="font-size:0.72rem; color:#666;">Qtd: ${qtdNum} x R$ ${precoNum.toFixed(2).replace('.', ',')}</span>
                     </div>
-                    <button class="btn-remover" onclick="removerDoCarrinho(${index})">✕</button>
+                    <button class="btn-remover" title="Remover item" onclick="removerDoCarrinho(${index})">✕</button>
                 `;
                 container.appendChild(itemDiv);
             });
@@ -864,7 +883,7 @@
         }
 
         function enviarPedidoWhatsapp() {
-            if (carrinho.length === 0) {
+            if (!Array.isArray(carrinho) || carrinho.length === 0) {
                 mostrarAviso("⚠️ Seu carrinho está vazio!", true);
                 return;
             }
@@ -890,9 +909,11 @@
 
             let total = 0;
             carrinho.forEach((item, index) => {
-                const subtotal = (item.preco || 0) * (item.quantidade || 1);
+                let precoNum = typeof item.preco === 'number' ? item.preco : (parseFloat(String(item.preco || 0).replace(',', '.')) || 0);
+                const qtdNum = parseInt(item.quantidade) || 1;
+                const subtotal = precoNum * qtdNum;
                 total += subtotal;
-                texto += `${index + 1}. *${item.nome}*\n   • Tam: ${item.tamanho} | Qtd: ${item.quantidade} | Subtotal: R$ ${subtotal.toFixed(2).replace('.', ',')}\n`;
+                texto += `${index + 1}. *${item.nome}*\n   • Tam: ${item.tamanho} | Qtd: ${qtdNum} | Subtotal: R$ ${subtotal.toFixed(2).replace('.', ',')}\n`;
             });
 
             texto += `\n*TOTAL:* R$ ${total.toFixed(2).replace('.', ',')}\n\n`;
