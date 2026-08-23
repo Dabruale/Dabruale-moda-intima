@@ -678,25 +678,38 @@
             });
         });
 
-        function obterListaImagens(prod) {
-            let lista = [];
-
-            if (Array.isArray(prod.imagens)) {
-                lista = prod.imagens.filter(url => url && typeof url === 'string' && url.trim() !== '');
-            } else if (prod.imagens && typeof prod.imagens === 'object') {
-                lista = Object.values(prod.imagens).filter(url => url && typeof url === 'string' && url.trim() !== '');
-            }
-
-            const camposPossiveis = ['imagem', 'imagem1', 'imagem2', 'imagem3', 'imagem4', 'imagem5', 'foto', 'foto1', 'foto2', 'foto3', 'url', 'url1', 'url2', 'url3'];
-            camposPossiveis.forEach(key => {
-                if (prod[key] && typeof prod[key] === 'string' && prod[key].trim() !== '' && !lista.includes(prod[key])) {
-                    lista.push(prod[key]);
-                }
-            });
-
-            if (lista.length === 0) lista.push(IMG_PADRAO);
-            return lista;
+       function otimizarUrlCloudinary(url) {
+    if (!url || typeof url !== 'string') return url;
+    // Se a imagem for do Cloudinary, injeta os parâmetros de compressão automática
+    if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
+        if (!url.includes('f_auto')) {
+            return url.replace('/upload/', '/upload/f_auto,q_auto,w_500/');
         }
+    }
+    return url;
+}
+
+function obterListaImagens(prod) {
+    let lista = [];
+
+    if (Array.isArray(prod.imagens)) {
+        lista = prod.imagens.filter(url => url && typeof url === 'string' && url.trim() !== '');
+    } else if (prod.imagens && typeof prod.imagens === 'object') {
+        lista = Object.values(prod.imagens).filter(url => url && typeof url === 'string' && url.trim() !== '');
+    }
+
+    const camposPossiveis = ['imagem', 'imagem1', 'imagem2', 'imagem3', 'imagem4', 'imagem5', 'foto', 'foto1', 'foto2', 'foto3', 'url', 'url1', 'url2', 'url3'];
+    camposPossiveis.forEach(key => {
+        if (prod[key] && typeof prod[key] === 'string' && prod[key].trim() !== '' && !lista.includes(prod[key])) {
+            lista.push(prod[key]);
+        }
+    });
+
+    if (lista.length === 0) lista.push(IMG_PADRAO);
+
+    // Otimiza todas as imagens do Cloudinary para carregar super rápido
+    return lista.map(url => otimizarUrlCloudinary(url));
+}
 
         function selecionarCategoria(cat, elemento) {
             categoriaAtual = cat;
