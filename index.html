@@ -528,11 +528,11 @@
                 <span></span>
             </div>
 
-          <div class="produtos-grid" id="gridProdutos">
-    <p style="text-align:center; padding:30px; color:#d81b60; font-weight:bold;">
-        ⏳ Carregando produtos...
-    </p>
-</div>
+            <div class="produtos-grid" id="gridProdutos">
+                <p style="text-align:center; padding:30px; color:#d81b60; font-weight:bold;">
+                    ⏳ Carregando produtos...
+                </p>
+            </div>
         </main>
 
         <footer>
@@ -678,38 +678,36 @@
             });
         });
 
-       function otimizarUrlCloudinary(url) {
-    if (!url || typeof url !== 'string') return url;
-    // Se a imagem for do Cloudinary, injeta os parâmetros de compressão automática
-    if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
-        if (!url.includes('f_auto')) {
-            return url.replace('/upload/', '/upload/f_auto,q_auto,w_500/');
+        function otimizarUrlCloudinary(url) {
+            if (!url || typeof url !== 'string') return url;
+            if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
+                if (!url.includes('f_auto')) {
+                    return url.replace('/upload/', '/upload/f_auto,q_auto,w_500/');
+                }
+            }
+            return url;
         }
-    }
-    return url;
-}
 
-function obterListaImagens(prod) {
-    let lista = [];
+        function obterListaImagens(prod) {
+            let lista = [];
 
-    if (Array.isArray(prod.imagens)) {
-        lista = prod.imagens.filter(url => url && typeof url === 'string' && url.trim() !== '');
-    } else if (prod.imagens && typeof prod.imagens === 'object') {
-        lista = Object.values(prod.imagens).filter(url => url && typeof url === 'string' && url.trim() !== '');
-    }
+            if (Array.isArray(prod.imagens)) {
+                lista = prod.imagens.filter(url => url && typeof url === 'string' && url.trim() !== '');
+            } else if (prod.imagens && typeof prod.imagens === 'object') {
+                lista = Object.values(prod.imagens).filter(url => url && typeof url === 'string' && url.trim() !== '');
+            }
 
-    const camposPossiveis = ['imagem', 'imagem1', 'imagem2', 'imagem3', 'imagem4', 'imagem5', 'foto', 'foto1', 'foto2', 'foto3', 'url', 'url1', 'url2', 'url3'];
-    camposPossiveis.forEach(key => {
-        if (prod[key] && typeof prod[key] === 'string' && prod[key].trim() !== '' && !lista.includes(prod[key])) {
-            lista.push(prod[key]);
+            const camposPossiveis = ['imagem', 'imagem1', 'imagem2', 'imagem3', 'imagem4', 'imagem5', 'foto', 'foto1', 'foto2', 'foto3', 'url', 'url1', 'url2', 'url3'];
+            camposPossiveis.forEach(key => {
+                if (prod[key] && typeof prod[key] === 'string' && prod[key].trim() !== '' && !lista.includes(prod[key])) {
+                    lista.push(prod[key]);
+                }
+            });
+
+            if (lista.length === 0) lista.push(IMG_PADRAO);
+
+            return lista.map(url => otimizarUrlCloudinary(url));
         }
-    });
-
-    if (lista.length === 0) lista.push(IMG_PADRAO);
-
-    // Otimiza todas as imagens do Cloudinary para carregar super rápido
-    return lista.map(url => otimizarUrlCloudinary(url));
-}
 
         function selecionarCategoria(cat, elemento) {
             categoriaAtual = cat;
@@ -766,7 +764,6 @@ function obterListaImagens(prod) {
             const termoBusca = document.getElementById("inputBusca").value.toLowerCase();
             grid.innerHTML = "";
 
-            // Filtra e remove produtos fantasma/corrompidos sem nome
             const filtrados = todosProdutos.filter(prod => {
                 if (!prod || !prod.nome || typeof prod.nome !== 'string' || prod.nome.trim() === '') return false;
 
@@ -933,9 +930,12 @@ function obterListaImagens(prod) {
                         <div>
                             <strong>${item.nome || 'Produto'}</strong><br>
                             <span class="badge-tamanho">Tamanho: ${item.tamanho || 'N/A'}</span><br>
-                            <span style="font-size:0.72rem; color:#666;">Qtd: ${qtdNum} x R$ ${precoNum.toFixed(2).replace('.', ',')}</span>
+                            <small>Qtd: ${qtdNum} x R$ ${precoNum.toFixed(2).replace('.', ',')}</small>
                         </div>
-                        <button class="btn-remover" title="Remover item" onclick="removerDoCarrinho(${index})">✕</button>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <strong>R$ ${subtotal.toFixed(2).replace('.', ',')}</strong>
+                            <button class="btn-remover" onclick="removerDoCarrinho(${index})">✕</button>
+                        </div>
                     </div>
                 `;
             });
@@ -946,7 +946,7 @@ function obterListaImagens(prod) {
 
         function enviarPedidoWhatsapp() {
             if (!Array.isArray(carrinho) || carrinho.length === 0) {
-                mostrarAviso("⚠️ Seu carrinho está vazio!", true);
+                alert("Seu carrinho está vazio!");
                 return;
             }
 
@@ -954,40 +954,41 @@ function obterListaImagens(prod) {
             const rua = document.getElementById('clienteRua').value.trim();
             const numero = document.getElementById('clienteNumero').value.trim();
             const bairro = document.getElementById('clienteBairro').value.trim();
-            const cepRef = document.getElementById('clienteCepRef').value.trim();
             const cidade = document.getElementById('clienteCidade').value.trim();
             const estado = document.getElementById('clienteEstado').value.trim();
             const pagamento = document.getElementById('clientePagamento').value;
+            const cepRef = document.getElementById('clienteCepRef').value.trim();
             const obs = document.getElementById('clienteObs').value.trim();
 
             if (!nome || !rua || !numero || !bairro || !cidade || !estado) {
-                mostrarAviso("⚠️ Preencha todos os campos obrigatórios (*)", true);
+                alert("Por favor, preencha todos os campos obrigatórios (*).");
                 return;
             }
 
-            let texto = `*NOVO PEDIDO - DABRUALE MODA ÍNTIMA*\n\n`;
-            texto += `*Cliente:* ${nome}\n\n`;
-            texto += `*PRODUTOS:*\n`;
+            let mensagem = `*NOVO PEDIDO - DABRUALE MODA ÍNTIMA*\n\n`;
+            mensagem += `👤 *Cliente:* ${nome}\n`;
+            mensagem += `📍 *Endereço:* ${rua}, Nº ${numero} - ${bairro}\n`;
+            mensagem += `🏙️ *Cidade/UF:* ${cidade}/${estado}\n`;
+            if (cepRef) mensagem += `📌 *Ref/CEP:* ${cepRef}\n`;
+            mensagem += `💳 *Pagamento:* ${pagamento}\n`;
+            if (obs) mensagem += `📝 *Obs:* ${obs}\n`;
 
+            mensagem += `\n🛒 *ITENS DO PEDIDO:*\n`;
             let total = 0;
-            carrinho.forEach((item, index) => {
+            carrinho.forEach((item, i) => {
                 let precoNum = typeof item.preco === 'number' ? item.preco : (parseFloat(String(item.preco || 0).replace(',', '.')) || 0);
-                const qtdNum = parseInt(item.quantidade) || 1;
-                const subtotal = precoNum * qtdNum;
+                let qtdNum = parseInt(item.quantidade) || 1;
+                let subtotal = precoNum * qtdNum;
                 total += subtotal;
-                texto += `${index + 1}. *${item.nome}*\n   • Tam: ${item.tamanho} | Qtd: ${qtdNum} | Subtotal: R$ ${subtotal.toFixed(2).replace('.', ',')}\n`;
+                mensagem += `${i + 1}. *${item.nome}* | Tam: ${item.tamanho} | Qtd: ${qtdNum} x R$ ${precoNum.toFixed(2).replace('.', ',')} = R$ ${subtotal.toFixed(2).replace('.', ',')}\n`;
             });
 
-            texto += `\n*TOTAL:* R$ ${total.toFixed(2).replace('.', ',')}\n\n`;
-            texto += `*ENTREGA:*\n${rua}, Nº ${numero} - ${bairro}\n`;
-            if (cepRef) texto += `Ref/CEP: ${cepRef}\n`;
-            texto += `${cidade}/${estado}\n\n`;
-            texto += `*Pagamento:* ${pagamento}\n`;
-            if (obs) texto += `*Obs:* ${obs}\n`;
+            mensagem += `\n💰 *TOTAL:* R$ ${total.toFixed(2).replace('.', ',')}`;
 
-            const link = `https://api.whatsapp.com/send?phone=${NUMERO_WHATSAPP}&text=${encodeURIComponent(texto)}`;
-            window.open(link, '_blank');
+            const linkWhatsapp = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
+            window.open(linkWhatsapp, '_blank');
         }
     </script>
 </body>
+
 </html>
