@@ -14,10 +14,9 @@ const firebaseConfig = {
     projectId: "dabruale-a9712",
     storageBucket: "dabruale-a9712.appspot.com",
     messagingSenderId: "904434904806",
-   appId: "1:904434904806:web:2054057c62bd41aa361527",
-  measurementId: "G-H4GF971P31"
+    appId: "1:904434904806:web:2054057c62bd41aa361527",
+    measurementId: "G-H4GF971P31"
 };
-
 
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
@@ -48,6 +47,12 @@ const tituloForm = document.getElementById('tituloForm');
 const listaProdutos = document.getElementById('listaProdutos');
 const totalProdutos = document.getElementById('totalProdutos');
 const aviso = document.getElementById('aviso');
+
+// --- OTIMIZAÇÃO DE URL DO CLOUDINARY ---
+function otimizarUrlCloudinary(url, largura = 300) {
+    if (!url || typeof url !== 'string' || !url.includes('/upload/')) return url;
+    return url.replace('/upload/', `/upload/f_auto,q_auto,w_${largura}/`);
+}
 
 // PREVIEW DAS IMAGENS NA TELA
 window.previewImagem = function (input, previewId) {
@@ -160,12 +165,11 @@ if (formLogin) {
     });
 }
 
-// MONITOR DE AUTENTICAÇÃO
+// MONITOR DE AUTENTICAÇÃO (SÓ AFETA PAINEL ADMIN)
 auth.onAuthStateChanged((user) => {
     if (user) {
         if (loginContainer) loginContainer.style.display = 'none';
         if (adminPanel) adminPanel.style.display = 'flex';
-        carregarProdutos();
     } else {
         if (loginContainer) loginContainer.style.display = 'flex';
         if (adminPanel) adminPanel.style.display = 'none';
@@ -248,7 +252,7 @@ if (formProduto) {
     });
 }
 
-// CARREGAR LISTA DE PRODUTOS
+// CARREGAR LISTA DE PRODUTOS (FUNCIONA PARA VISITANTES E ADMINS)
 function carregarProdutos() {
     if (!listaProdutos) return;
 
@@ -258,6 +262,11 @@ function carregarProdutos() {
         produtosCache = {};
         let total = 0;
 
+        if (!snapshot.exists()) {
+            listaProdutos.innerHTML = '<p style="text-align:center; padding:20px;">Nenhum produto cadastrado.</p>';
+            return;
+        }
+
         snapshot.forEach((childSnapshot) => {
             total++;
             const id = childSnapshot.key;
@@ -265,8 +274,9 @@ function carregarProdutos() {
             produtosCache[id] = p;
 
             const fotoCapa = p.imagem || p.imagem1 || 'https://via.placeholder.com/60';
+            const fotoOtimizada = otimizarUrlCloudinary(fotoCapa, 300);
             
-            // Tratamento flexível de tamanhos (suporta Arrays e cadastros antigos em Texto)
+            // Tratamento flexível de tamanhos
             let listaTamanhos = 'Único';
             if (Array.isArray(p.tamanhos) && p.tamanhos.length > 0) {
                 listaTamanhos = p.tamanhos.join(', ');
@@ -277,7 +287,7 @@ function carregarProdutos() {
             const card = document.createElement('div');
             card.className = 'item-admin-produto';
             card.innerHTML = `
-                <img src="${fotoCapa}" alt="${p.nome || ''}">
+                <img src="${fotoOtimizada}" alt="${p.nome || ''}" loading="lazy" width="70" height="70">
                 <div class="item-info">
                     <div class="item-nome">${p.nome || 'Sem nome'}</div>
                     <div class="item-detalhes">${p.categoria ? p.categoria.toUpperCase() : ''} | Tamanhos: <strong>${listaTamanhos}</strong></div>
@@ -292,8 +302,17 @@ function carregarProdutos() {
         });
 
         if (totalProdutos) totalProdutos.innerText = total;
+    }, (error) => {
+        console.error("Erro ao carregar produtos do Firebase:", error);
+        if (listaProdutos) {
+            listaProdutos.innerHTML = '<p style="color:red; text-align:center; padding:20px;">Erro de permissão no Firebase. Verifique as regras do banco de dados.</p>';
+        }
     });
 }
+
+// EXECUTA O CARREGAMENTO IMEDIATAMENTE AO ABRIR A PÁGINA
+document.addEventListener('DOMContentLoaded', carregarProdutos);
+carregarProdutos();
 
 // EDITAR PRODUTO
 window.editarProduto = function (id) {
@@ -305,10 +324,9 @@ window.editarProduto = function (id) {
     if (precoInput) precoInput.value = p.preco || '';
     if (categoriaInput) categoriaInput.value = p.categoria || '';
 
-    // Limpar todas as caixas de seleção primeiro
+    // Limpar checkboxes
     document.querySelectorAll('input[name="tamanhos"]').forEach(cb => cb.checked = false);
 
-    // Normalizar a leitura dos tamanhos salvos
     let tamanhosParaMarcar = [];
     if (Array.isArray(p.tamanhos)) {
         tamanhosParaMarcar = p.tamanhos;
@@ -316,7 +334,6 @@ window.editarProduto = function (id) {
         tamanhosParaMarcar = p.tamanhos.split(',').map(s => s.trim());
     }
 
-    // Marcar no formulário os tamanhos encontrados
     tamanhosParaMarcar.forEach(tam => {
         const cb = document.querySelector(`input[name="tamanhos"][value="${tam}"]`);
         if (cb) cb.checked = true;
@@ -332,19 +349,19 @@ window.editarProduto = function (id) {
 
     const p1 = document.getElementById('preview1');
     if (p1) {
-        p1.src = img1Val;
+        p1.src = otimizarUrlCloudinary(img1Val, 300);
         p1.style.display = img1Val ? 'block' : 'none';
     }
 
     const p2 = document.getElementById('preview2');
     if (p2) {
-        p2.src = img2Val;
+        p2.src = otimizarUrlCloudinary(img2Val, 300);
         p2.style.display = img2Val ? 'block' : 'none';
     }
 
     const p3 = document.getElementById('preview3');
     if (p3) {
-        p3.src = img3Val;
+        p3.src = otimizarUrlCloudinary(img3Val, 300);
         p3.style.display = img3Val ? 'block' : 'none';
     }
 
